@@ -31,6 +31,7 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   for(i=0;i<*np;i++) {                       // i=0 から i=(*np)-1まで
     if(fgets(buff,sizeof(buff),fp)!=NULL) 
       sscanf(buff,"%d %d %d", &(p[i].index), &(p[i].x), &(p[i].y)); // i番目の点の座標を読み込む
+      p[i].visited = false;
   }                                 
 
   fclose(fp);
@@ -55,8 +56,6 @@ int main(int argc, char *argv[])
   }
 
   read_tsp_data(argv[1], pts, &n_pts);
-
-  print_points(pts, n_pts);
 
   struct kdnode* kdroot = build_kdtree(pts, n_pts); 
   free_kdtree(kdroot);
