@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <float.h>
 #include <math.h>
 
 #include "kdtree.h"
@@ -81,7 +82,6 @@ int main(int argc, char *argv[])
 {
   int n_pts;
   struct point pts[MAX_N];
-  int tour[MAX_N];
 
   if(argc != 2) {
     fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
@@ -89,26 +89,34 @@ int main(int argc, char *argv[])
   }
 
   read_tsp_data(argv[1], pts, &n_pts);
-  print_points(pts, n_pts);
-  putchar('\n');
+  //print_points(pts, n_pts);
+  //putchar('\n');
 
   //check_kdtree(pts, n_pts);
 
+  int tour[MAX_N];
+  int best_tour[MAX_N];
+  double min_length = DBL_MAX;
   struct kdtree* tree = build_kdtree(pts, n_pts);
-  struct point* list_tour = build_tour_nn(pts, n_pts, 0, tree);
-  for (int i = 0; i < n_pts; i++) {
-      tour[i] = list_tour->index;
-      printf("%d ", tour[i]);
-      list_tour = list_tour->next;
+
+  for (int start = 0; start < n_pts; start++) {
+      struct point* list_tour = build_tour_nn(pts, n_pts, start, tree);
+      for (int i = 0; i < n_pts; i++) {
+          tour[i] = list_tour->index;
+          list_tour = list_tour->next;
+      }
+      double length = tour_length(pts, n_pts, tour);
+      if (length < min_length) {
+          printf("length: %lf\n", length);
+          min_length = length;
+          memcpy(best_tour, tour, sizeof(int) * n_pts);
+      }
   }
-  putchar('\n');
-  double min_length = tour_length(pts, n_pts, tour);
-  printf("length: %lf\n", min_length);
 
   int num = 0;
   char tourFileName[20];
   sprintf(tourFileName, "tour%08d.dat", ++num);
-  write_tour_data(tourFileName, n_pts, tour);
+  write_tour_data(tourFileName, n_pts, best_tour);
 
   return EXIT_SUCCESS;
 }
