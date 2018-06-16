@@ -34,7 +34,9 @@ void ptree(struct kdnode* node, int depth)
             break;
     }
 
-    printf("[%d:(%d,%d)]\n", node->point->index, node->point->x, node->point->y);
+    printf("[#%d:(%d,%d) -> #%d]\n",
+           node->point->index, node->point->x, node->point->y,
+           depth ? node->parent->point->index : -1);
     ptree(node->left, depth+1);
     ptree(node->right, depth+1);
 }
@@ -126,6 +128,7 @@ void free_kdtree(struct kdtree* tree)
     if (tree->head == NULL) return;
 
     free(tree->head);
+    free(tree);
 }
 
 
@@ -184,6 +187,9 @@ void remove_node(struct kdnode* node, struct kdtree* tree)
     next->left = node->left;
     next->right = node->right;
     next->dim = node->dim;
+    if (node->left) node->left->parent = next;
+    if (node->right) node->right->parent = next;
+
     if (node->parent == NULL) {
         tree->root = next;
     } else if (node->parent->left == node) {
@@ -200,7 +206,7 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
     if (pindex > tree->max_index) {
         fprintf(
             stderr,
-            "Error: Trying to remove point#%d from a kdtree,\n"
+            "Error: Trying to remove point#%d from the kdtree,\n"
             "       but the maximum index of the tree is #%d\n",
             pindex, tree->max_index
         );
@@ -212,8 +218,8 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
     if (node->valid == false) {
         fprintf(
             stderr,
-            "Warning: Trying to remove point#%d from a kdtree,\n"
-            "         but point#%d was already removed from the tree.\n",
+            "Warning: Trying to remove point#%d from the kdtree,\n"
+            "         but point#%d was already removed.\n",
             pindex, pindex
         );
         return false;
@@ -274,8 +280,15 @@ void nearest_node(struct point* p, struct kdnode* node, struct kdnearest* kdn)
 int search_nearest(struct point* p, struct kdtree* tree)
 {
     struct kdnearest kdn;
+    kdn.node = NULL;
     kdn.sqrdist = DBL_MAX;
+
+    if (tree->root == NULL) return -1;
+
     nearest_node(p, tree->root, &kdn);
-    return kdn.node->point->index;
+
+    if (kdn.node) return kdn.node->point->index;
+
+    return -1;
 } 
 

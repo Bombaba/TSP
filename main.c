@@ -5,11 +5,24 @@
 
 #include "kdtree.h"
 #include "point.h"
+#include "nn.h"
+#include "test.h"
 
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
 
+
+double dist(struct point p, struct point q) { // pとq の間の距離を計算 
+  return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
+}
+
+double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
+  int i;
+  double sum=0.0;
+  for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
+  return sum;// 総距離が関数の戻り値
+}
 
 void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   FILE *fp;
@@ -39,18 +52,36 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   fclose(fp);
 }
 
+void write_tour_data(char *filename, int n, int tour[MAX_N]){
+  FILE *fp; 
+  int i;
+ 
+ // 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
+  if((fp=fopen(filename,"wt"))==NULL){ 
+    fprintf(stderr,"Error: File %s open failed.\n",filename);
+    exit(EXIT_FAILURE);
+  }
+  fprintf(fp,"%d\n",n);
+  for(i=0;i<n; i++){
+   fprintf(fp,"%d ",tour[i]);
+  }
+  fprintf(fp,"\n");
+  fclose(fp);
+}
+
 void print_points(struct point pts[], int n_pts)
 {
-    for (int i = 0; i < n_pts; i++)
-    {
-        printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
-    }
+  for (int i = 0; i < n_pts; i++)
+  {
+    printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
+  }
 }
 
 int main(int argc, char *argv[])
 {
   int n_pts;
   struct point pts[MAX_N];
+  int tour[MAX_N];
 
   if(argc != 2) {
     fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
@@ -61,14 +92,21 @@ int main(int argc, char *argv[])
   print_points(pts, n_pts);
   putchar('\n');
 
-  struct kdtree* tree = build_kdtree(pts, n_pts); 
-  print_tree(tree);
-  //remove_point_from_tree(17, tree);
-  //print_tree(tree);
-  printf("The nearest point from point#17 is: %d\n", search_nearest(pts+17, tree));
+  //check_tree(pts, n_pts);
+  struct point* list_tour = build_tour_nn(pts, n_pts, 0);
+  for (int i = 0; i < n_pts; i++) {
+      tour[i] = list_tour->index;
+      printf("%d ", tour[i]);
+      list_tour = list_tour->next;
+  }
+  putchar('\n');
+  double min_length = tour_length(pts, n_pts, tour);
+  printf("length: %lf\n", min_length);
 
-  free_kdtree(tree);
-  tree = NULL;
+  int num = 0;
+  char tourFileName[20];
+  sprintf(tourFileName, "tour%08d.dat", ++num);
+  write_tour_data(tourFileName, n_pts, tour);
 
   return EXIT_SUCCESS;
 }
