@@ -92,8 +92,10 @@ int main(int argc, char *argv[])
   print_points(pts, n_pts);
   putchar('\n');
 
-  //check_tree(pts, n_pts);
-  struct point* list_tour = build_tour_nn(pts, n_pts, 0);
+  //check_kdtree(pts, n_pts);
+
+  struct kdtree* tree = build_kdtree(pts, n_pts);
+  struct point* list_tour = build_tour_nn(pts, n_pts, 0, tree);
   for (int i = 0; i < n_pts; i++) {
       tour[i] = list_tour->index;
       printf("%d ", tour[i]);

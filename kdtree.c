@@ -12,7 +12,7 @@
 
 struct kdnode* find_min(struct kdnode* node, int dim);
 
-void ptree(struct kdnode* node, int depth)
+void ptree(const struct kdnode* node, int depth)
 {
     if (node == NULL) return;
 
@@ -41,9 +41,30 @@ void ptree(struct kdnode* node, int depth)
     ptree(node->right, depth+1);
 }
 
-void print_tree(struct kdtree* tree)
+void print_kdtree(const struct kdtree* tree)
 {
     ptree(tree->root, 0);
+}
+
+struct kdtree* copy_kdtree(const struct kdtree* src)
+{
+    struct kdnode* shead = src->head;
+    struct kdnode* dhead = (struct kdnode*) malloc(sizeof(struct kdnode) * src->size);
+
+    for (int i = 0; i < src->size; i++) {
+        dhead[i].point = shead[i].point;
+        dhead[i].left = shead[i].left ? (dhead + (shead[i].left - shead)) : NULL;
+        dhead[i].right = shead[i].right ? (dhead + (shead[i].right - shead)) : NULL;
+        dhead[i].parent = shead[i].parent ? (dhead + (shead[i].parent - shead)) : NULL;
+        dhead[i].dim = shead[i].dim;
+        dhead[i].valid = shead[i].valid;
+    }
+
+    struct kdtree* dst = (struct kdtree*) malloc(sizeof(struct kdtree));
+    dst->head = dhead;
+    dst->root = dst->head + src->root->point->index;
+    dst->size = src->size;
+    return dst;
 }
 
 
@@ -117,7 +138,7 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     struct kdtree* tree = (struct kdtree*) malloc(sizeof(struct kdtree));
     tree->head = head;
     tree->root = root;
-    tree->max_index = n_pts - 1;
+    tree->size = n_pts;
 
     return tree;
 }
@@ -203,12 +224,12 @@ void remove_node(struct kdnode* node, struct kdtree* tree)
 bool remove_point_from_tree(int pindex, struct kdtree* tree)
 {
     //int pindex = p->index;
-    if (pindex > tree->max_index) {
+    if (pindex >= tree->size) {
         fprintf(
             stderr,
             "Error: Trying to remove point#%d from the kdtree,\n"
             "       but the maximum index of the tree is #%d\n",
-            pindex, tree->max_index
+            pindex, tree->size-1
         );
         return false;
     }
@@ -229,7 +250,7 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
     return true;
 }
 
-void nearest_node(struct point* p, struct kdnode* node, struct kdnearest* kdn)
+void nearest_node(const struct point* p, struct kdnode* node, struct kdnearest* kdn)
 {
     double sqrdist = metric(p, node->point);
 
@@ -277,7 +298,7 @@ void nearest_node(struct point* p, struct kdnode* node, struct kdnearest* kdn)
     }
 }
 
-int search_nearest(struct point* p, struct kdtree* tree)
+int search_nearest(const struct point* p, const struct kdtree* tree)
 {
     struct kdnearest kdn;
     kdn.node = NULL;
