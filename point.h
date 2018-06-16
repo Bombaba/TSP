@@ -6,7 +6,7 @@ struct point {
     int index;
     int x;
     int y;
-    bool visited;
     int pos[2];
+    struct point* next;
 };
 

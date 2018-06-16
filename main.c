@@ -33,7 +33,7 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
       sscanf(buff,"%d %d %d", &(p[i].index), &(p[i].x), &(p[i].y)); // i番目の点の座標を読み込む
       p[i].pos[0] = p[i].x;
       p[i].pos[1] = p[i].y;
-      p[i].visited = false;
+      p[i].next = NULL;
   }                                 
 
   fclose(fp);
@@ -59,8 +59,14 @@ int main(int argc, char *argv[])
 
   read_tsp_data(argv[1], pts, &n_pts);
   print_points(pts, n_pts);
+  putchar('\n');
 
   struct kdtree* tree = build_kdtree(pts, n_pts); 
+  print_tree(tree);
+  //remove_point_from_tree(17, tree);
+  //print_tree(tree);
+  printf("The nearest point from point#17 is: %d\n", search_nearest(pts+17, tree));
+
   free_kdtree(tree);
   tree = NULL;
 
