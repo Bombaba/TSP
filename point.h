@@ -7,5 +7,6 @@ struct point {
     int x;
     int y;
     bool visited;
+    int pos[2];
 };
 
