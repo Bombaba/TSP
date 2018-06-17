@@ -43,6 +43,8 @@ bool two_opt_fast(struct point pts[], int n_pts, int tour[],
             pc->prev = pa;
             pb->next = pd;
             pd->prev = pb;
+
+            i--;
         }
     }
 
