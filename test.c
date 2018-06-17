@@ -23,15 +23,19 @@ void search_circle(struct kdtree* tree)
         int ix1;
         printf("center point: ");
         scanf("%d", &ix1);
+        if (ix1 < 0) break;
         int ix2;
         printf("end point: ");
         scanf("%d", &ix2);
+        if (ix2 < 0) break;
         //double radius;
         //printf("radius: ");
         //scanf("%lf", &radius);
 
         struct point* center = tree->head[ix1].point;
         struct point* end = tree->head[ix2].point;
+
+        printf("Radius Squared: %lf\n", metric(center, end));
 
         search_nearby_points(center, tree, heap, metric(center, end), -1);
 
@@ -40,6 +44,8 @@ void search_circle(struct kdtree* tree)
             printf("#%d : %lf\n", p->index, metric(center, p));
         }
     }
+
+    free_kdheap(heap);
 }
 
 

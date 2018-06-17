@@ -38,3 +38,4 @@ struct kdheap* create_kdheap(struct kdtree* tree);
 int search_nearby_points(const struct point* p, const struct kdtree* tree,
                          struct kdheap* heap, double maxsqrdist, int maxsize);
 struct point* kdh_pop(struct kdheap* heap);
+void free_kdheap(struct kdheap* heap);

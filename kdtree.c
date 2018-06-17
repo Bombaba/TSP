@@ -320,7 +320,8 @@ struct kdheap* create_kdheap(struct kdtree* tree)
     return heap;
 }
 
-void free_kdheap(struct kdheap* heap) {
+void free_kdheap(struct kdheap* heap)
+{
     if (heap) {
         if (heap->content) free(heap->content);
         free(heap);
