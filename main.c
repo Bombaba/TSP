@@ -122,24 +122,24 @@ int main(int argc, char *argv[])
       putchar('\n');
   }
 
-  //printf("\n********** Nearest Insertion **********\n");
-  //for (int start = 0; start < n_pts; start++) {
-  //    struct point* list_tour = build_tour_ni(pts, n_pts, start, tree);
-  //    for (int i = 0; i < n_pts; i++) {
-  //        tour[i] = list_tour->index;
-  //        list_tour = list_tour->next;
-  //    }
-  //    double length = tour_length(pts, n_pts, tour);
-  //    printf("length: %lf", length);
-  //    if (length < min_length) {
-  //        printf(" [*]");
-  //        min_length = length;
-  //        memcpy(best_tour, tour, sizeof(int) * n_pts);
-  //        sprintf(tourFileName, "tour%08d.dat", ++num);
-  //        write_tour_data(tourFileName, n_pts, best_tour);
-  //    }
-  //    putchar('\n');
-  //}
+  printf("\n********** Nearest Insertion **********\n");
+  for (int start = 0; start < n_pts; start++) {
+      struct point* list_tour = build_tour_ni(pts, n_pts, start, tree);
+      for (int i = 0; i < n_pts; i++) {
+          tour[i] = list_tour->index;
+          list_tour = list_tour->next;
+      }
+      double length = tour_length(pts, n_pts, tour);
+      printf("length: %lf", length);
+      if (length < min_length) {
+          printf(" [*]");
+          min_length = length;
+          memcpy(best_tour, tour, sizeof(int) * n_pts);
+          sprintf(tourFileName, "tour%08d.dat", ++num);
+          write_tour_data(tourFileName, n_pts, best_tour);
+      }
+      putchar('\n');
+  }
 
 
   return EXIT_SUCCESS;

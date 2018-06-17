@@ -7,8 +7,6 @@
 #include "kdtree.h"
 #include "point.h"
 
-#define metric(p, q) (((p)->x-(q)->x) * ((p)->x-(q)->x) + ((p)->y-(q)->y) * ((p)->y-(q)->y))
-#define point_to_kdnode(p, tree) ((tree)->head + (p)->index)
 
 struct kdnode* find_min(struct kdnode* node, int dim);
 

@@ -3,8 +3,6 @@
 #include "point.h"
 #include "kdtree.h"
 
-#define dist(p, q) (((p)->x-(q)->x) * ((p)->x-(q)->x) + ((p)->y-(q)->y) * ((p)->y-(q)->y))
-#define insert(a, b, c) a->next = c; c->next = b; c->prev = a; b->prev = c;        
 
 struct point* build_tour_ni(struct point pts[], int n_pts, int start,
                             const struct kdtree* tree)
@@ -32,7 +30,7 @@ struct point* build_tour_ni(struct point pts[], int n_pts, int start,
 
         for (int i = 0; i < n_list; i++) {
             nearest = search_nearest(current, tree_copy);
-            double d = dist(current, nearest);
+            double d = metric(current, nearest);
             if (d < min_dist) {
                 min_dist = d;
                 a = current;
@@ -44,7 +42,7 @@ struct point* build_tour_ni(struct point pts[], int n_pts, int start,
         struct point* b = a->prev;
         struct point* c = a->next;
 
-        if (dist(r, b) - dist(b, a) < dist(r, c) - dist(a, c)) {
+        if (metric(r, b) - metric(b, a) < metric(r, c) - metric(a, c)) {
             insert(b, a, r);
         } else {
             insert(a, c, r);
