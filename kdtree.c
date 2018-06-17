@@ -229,7 +229,7 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
             "       but the maximum index of the tree is #%d\n",
             pindex, tree->size-1
         );
-        return false;
+        exit(EXIT_FAILURE);
     }
 
     struct kdnode* node = tree->head + pindex;

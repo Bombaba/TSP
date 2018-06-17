@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 
 struct point {
@@ -13,7 +15,16 @@ struct point {
 
 static inline void insert(struct point* a, struct point* b, struct point* c)
 {
-    a->next = c; c->next = b; c->prev = a; b->prev = c;        
+    if (a->next != b || b->prev != a) {
+        fprintf(stderr,
+                "Point#%d and Point#%d is not connected in this order",
+                a->index, b->index);
+        exit(EXIT_FAILURE);
+    }
+    a->next = c;
+    c->next = b;
+    c->prev = a;
+    b->prev = c;        
 }
 
 static inline double metric(const struct point* p, const struct point* q)
