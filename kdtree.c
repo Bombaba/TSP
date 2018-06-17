@@ -248,13 +248,13 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
     return true;
 }
 
-void nearest_node(const struct point* p, struct kdnode* node, struct kdnearest* kdn)
+void nearest_point(const struct point* p, struct kdnode* node, struct kdnear* kdn)
 {
     double sqrdist = metric(p, node->point);
 
     if (node->left == NULL && node->right == NULL) {
         if (p != node->point && sqrdist < kdn->sqrdist) {
-            kdn->node = node;
+            kdn->point = node->point;
             kdn->sqrdist = sqrdist;
         }
         return;
@@ -274,10 +274,10 @@ void nearest_node(const struct point* p, struct kdnode* node, struct kdnearest* 
             next = node->right;
         }
     }
-    nearest_node(p, next, kdn);
+    nearest_point(p, next, kdn);
 
     if (p != node->point && sqrdist < kdn->sqrdist) {
-        kdn->node = node;
+        kdn->point = node->point;
         kdn->sqrdist = sqrdist;
     }
 
@@ -291,23 +291,188 @@ void nearest_node(const struct point* p, struct kdnode* node, struct kdnearest* 
             next = node->left;
         }
         if (next != NULL) {
-            nearest_node(p, next, kdn);
+            nearest_point(p, next, kdn);
         }
     }
 }
 
 struct point* search_nearest(const struct point* p, const struct kdtree* tree)
 {
-    struct kdnearest kdn;
-    kdn.node = NULL;
+    struct kdnear kdn;
+    kdn.point = NULL;
     kdn.sqrdist = DBL_MAX;
 
     if (tree->root == NULL) return NULL;
 
-    nearest_node(p, tree->root, &kdn);
+    nearest_point(p, tree->root, &kdn);
 
-    if (kdn.node) return kdn.node->point;
-
-    return NULL;
+    return kdn.point;
 } 
 
+struct kdheap* create_kdheap(struct kdtree* tree)
+{
+    struct kdheap* heap = (struct kdheap*) malloc(sizeof(struct kdheap));
+
+    heap->content = (struct kdnear*) malloc(sizeof(struct kdnear) * tree->size);
+    heap->length = 0;
+    heap->maxsize = tree->size;
+
+    return heap;
+}
+
+void free_kdheap(struct kdheap* heap) {
+    if (heap) {
+        if (heap->content) free(heap->content);
+        free(heap);
+    }
+}
+
+void kdh_clear(struct kdheap* heap)
+{
+    heap->length = 0;
+}
+
+#define heap_up(i) ( ((i)-1) / 2 )
+void kdh_bubbleup(int ix, struct kdheap* heap)
+{
+    struct kdnear* content = heap->content;
+    struct kdnear this = content[ix];
+
+    while (ix > 0) {
+        int pix = heap_up(ix);
+        if (this.sqrdist < content[pix].sqrdist) {
+            struct kdnear parent = content[pix];
+            content[pix] = this;
+            content[ix] = parent;
+            ix = pix;
+        } else {
+            break;
+        }
+    }
+}
+
+#define heap_left(i) ( 2*(i) + 1 )
+#define heap_right(i) ( 2*(i) + 2 )
+void kdh_sinkdown(int ix, struct kdheap* heap)
+{
+    int length = heap->length;
+    struct kdnear* content = heap->content;
+    if (ix >= length) return;
+
+    struct kdnear this = heap->content[ix];
+    int ix_swap = ix;
+    while (ix < length) {
+        int lix = heap_left(ix);
+        int rix = heap_right(ix);
+
+        if (lix < length && content[lix].sqrdist < this.sqrdist) {
+            ix_swap = lix;
+        }
+        if (rix < length && content[rix].sqrdist < content[ix_swap].sqrdist) {
+            ix_swap = rix;
+        }
+        if (ix_swap != ix) {
+            struct kdnear shorter = content[ix_swap];
+            content[ix_swap] = this;
+            content[ix] = shorter;
+            ix = ix_swap;
+        } else {
+            break;
+        }
+    }
+}
+
+void kdh_push(struct kdnear* kdn, struct kdheap* heap)
+{
+    heap->content[heap->length] = *kdn;
+    kdh_bubbleup(heap->length, heap);
+    if (heap->length < heap->maxsize) heap->length++;
+}
+
+struct point* kdh_pop(struct kdheap* heap)
+{
+    if (heap->length == 0) return NULL;
+
+    struct kdnear* content = heap->content;
+    struct kdnear top = content[0];
+    heap->length--;
+    if (heap->length > 0) {
+        content[0] = content[heap->length];
+        kdh_sinkdown(0, heap);
+    }
+    return top.point;
+}
+
+struct kdnear* kdh_look(int ix, struct kdheap* heap) {
+    if (ix > heap->length) return NULL;
+    return heap->content + ix;
+}
+
+void nearby_points(const struct point* p, struct kdnode* node,
+                   struct kdheap* heap, double maxsqrdist)
+{
+    double sqrdist = metric(p, node->point);
+
+    if (node->left == NULL && node->right == NULL) {
+        if (p != node->point && sqrdist < maxsqrdist) {
+            struct kdnear this = { .point=node->point, .sqrdist=sqrdist };
+            kdh_push(&this, heap);
+        }
+        return;
+    }
+
+    int dim = node->dim;
+
+    struct kdnode* next;
+    if (node->right == NULL) {
+        next = node->left;
+    } else if (node->left == NULL) {
+        next = node->right;
+    } else {
+        if (p->pos[dim] < node->point->pos[dim]) {
+            next = node->left;
+        } else {
+            next = node->right;
+        }
+    }
+    nearby_points(p, next, heap, maxsqrdist);
+
+    if (p != node->point && sqrdist < maxsqrdist) {
+        struct kdnear this = { .point=node->point, .sqrdist=sqrdist };
+        kdh_push(&this, heap);
+    }
+
+    double lin_sqrdist = p->pos[dim] - node->point->pos[dim];
+    lin_sqrdist *= lin_sqrdist;
+
+    if (lin_sqrdist < maxsqrdist) {
+        if(next == node->left) {
+            next = node->right;
+        } else {
+            next = node->left;
+        }
+        if (next != NULL) {
+            nearby_points(p, next, heap, maxsqrdist);
+        }
+    }
+}
+
+int search_nearby_points(const struct point* p, const struct kdtree* tree,
+                         struct kdheap* heap, double maxsqrdist, int maxsize)
+{
+    if (tree->root == NULL || heap == NULL) return -1;
+
+    kdh_clear(heap);
+
+    if (maxsize > 0 && maxsize <= tree->size) {
+        heap->maxsize = maxsize;
+    } else {
+        heap->maxsize = tree->size;
+    }
+
+    if (maxsqrdist < 0) maxsqrdist = DBL_MAX;
+
+    nearby_points(p, tree->root, heap, maxsqrdist);
+
+    return heap->length;
+} 

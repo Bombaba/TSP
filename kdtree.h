@@ -17,9 +17,15 @@ struct kdtree {
     int size;
 };
 
-struct kdnearest {
-    struct kdnode* node;
+struct kdnear {
+    struct point* point;
     double sqrdist;
+};
+
+struct kdheap {
+    struct kdnear* content;
+    int length;
+    int maxsize;
 };
 
 struct kdtree* build_kdtree(struct point pts[], int n_pts);
@@ -28,3 +34,7 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree);
 void print_kdtree(const struct kdtree* tree);
 struct point* search_nearest(const struct point* p, const struct kdtree* tree);
 struct kdtree* copy_kdtree(const struct kdtree* src);
+struct kdheap* create_kdheap(struct kdtree* tree);
+int search_nearby_points(const struct point* p, const struct kdtree* tree,
+                         struct kdheap* heap, double maxsqrdist, int maxsize);
+struct point* kdh_pop(struct kdheap* heap);

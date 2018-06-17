@@ -17,7 +17,7 @@ static inline void insert(struct point* a, struct point* b, struct point* c)
 {
     if (a->next != b || b->prev != a) {
         fprintf(stderr,
-                "Point#%d and Point#%d is not connected in this order",
+                "ERROR: Point#%d and Point#%d is not connected in this order",
                 a->index, b->index);
         exit(EXIT_FAILURE);
     }

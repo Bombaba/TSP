@@ -1,19 +1,45 @@
 #include <stdio.h>
-#include "test.h"
 #include "kdtree.h"
 #include "point.h"
+#include "test.h"
 
-void check_kdtree(struct point pts[], int n_pts)
+void remove_point_kdtree(struct kdtree* tree)
 {
-  struct kdtree* tree = build_kdtree(pts, n_pts);
-  print_kdtree(tree);
-  while(tree->root) {
-      int ix;
-      printf("Point to remove: ");
-      scanf("%d", &ix);
-      remove_point_from_tree(ix, tree);
-      print_kdtree(tree);
-  }
-
-  free_kdtree(tree);
+    print_kdtree(tree);
+    while(tree->root) {
+        int ix;
+        printf("Point to remove: ");
+        scanf("%d", &ix);
+        remove_point_from_tree(ix, tree);
+        print_kdtree(tree);
+    }
 }
+
+void search_circle(struct kdtree* tree)
+{
+    print_kdtree(tree);
+    struct kdheap* heap = create_kdheap(tree);
+    while (true) {
+        int ix1;
+        printf("center point: ");
+        scanf("%d", &ix1);
+        int ix2;
+        printf("end point: ");
+        scanf("%d", &ix2);
+        //double radius;
+        //printf("radius: ");
+        //scanf("%lf", &radius);
+
+        struct point* center = tree->head[ix1].point;
+        struct point* end = tree->head[ix2].point;
+
+        search_nearby_points(center, tree, heap, metric(center, end), -1);
+
+        while (heap->length) {
+            struct point* p = kdh_pop(heap);
+            printf("#%d : %lf\n", p->index, metric(center, p));
+        }
+    }
+}
+
+
