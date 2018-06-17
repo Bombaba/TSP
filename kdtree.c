@@ -298,18 +298,18 @@ void nearest_node(const struct point* p, struct kdnode* node, struct kdnearest* 
     }
 }
 
-int search_nearest(const struct point* p, const struct kdtree* tree)
+struct point* search_nearest(const struct point* p, const struct kdtree* tree)
 {
     struct kdnearest kdn;
     kdn.node = NULL;
     kdn.sqrdist = DBL_MAX;
 
-    if (tree->root == NULL) return -1;
+    if (tree->root == NULL) return NULL;
 
     nearest_node(p, tree->root, &kdn);
 
-    if (kdn.node) return kdn.node->point->index;
+    if (kdn.node) return kdn.node->point;
 
-    return -1;
+    return NULL;
 } 
 

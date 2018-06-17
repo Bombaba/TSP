@@ -8,5 +8,6 @@ struct point {
     int y;
     int pos[2];
     struct point* next;
+    struct point* prev;
 };
 

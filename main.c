@@ -7,6 +7,7 @@
 #include "kdtree.h"
 #include "point.h"
 #include "nn.h"
+#include "ni.h"
 #include "test.h"
 
 #define MAX_N 10000   // 点の数の最大値
@@ -99,6 +100,10 @@ int main(int argc, char *argv[])
   double min_length = DBL_MAX;
   struct kdtree* tree = build_kdtree(pts, n_pts);
 
+  int num = 0;
+  char tourFileName[20];
+
+  printf("\n********** Nearest Neighbor **********\n");
   for (int start = 0; start < n_pts; start++) {
       struct point* list_tour = build_tour_nn(pts, n_pts, start, tree);
       for (int i = 0; i < n_pts; i++) {
@@ -106,17 +111,36 @@ int main(int argc, char *argv[])
           list_tour = list_tour->next;
       }
       double length = tour_length(pts, n_pts, tour);
+      printf("length: %lf", length);
       if (length < min_length) {
-          printf("length: %lf\n", length);
+          printf(" [*]");
           min_length = length;
           memcpy(best_tour, tour, sizeof(int) * n_pts);
+          sprintf(tourFileName, "tour%08d.dat", ++num);
+          write_tour_data(tourFileName, n_pts, best_tour);
       }
+      putchar('\n');
   }
 
-  int num = 0;
-  char tourFileName[20];
-  sprintf(tourFileName, "tour%08d.dat", ++num);
-  write_tour_data(tourFileName, n_pts, best_tour);
+  //printf("\n********** Nearest Insertion **********\n");
+  //for (int start = 0; start < n_pts; start++) {
+  //    struct point* list_tour = build_tour_ni(pts, n_pts, start, tree);
+  //    for (int i = 0; i < n_pts; i++) {
+  //        tour[i] = list_tour->index;
+  //        list_tour = list_tour->next;
+  //    }
+  //    double length = tour_length(pts, n_pts, tour);
+  //    printf("length: %lf", length);
+  //    if (length < min_length) {
+  //        printf(" [*]");
+  //        min_length = length;
+  //        memcpy(best_tour, tour, sizeof(int) * n_pts);
+  //        sprintf(tourFileName, "tour%08d.dat", ++num);
+  //        write_tour_data(tourFileName, n_pts, best_tour);
+  //    }
+  //    putchar('\n');
+  //}
+
 
   return EXIT_SUCCESS;
 }
