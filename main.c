@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
   build_list_from_tour(pts, n_pts, best_tour);
   struct kdheap* heap = create_kdheap(tree);
-  while (two_opt1(pts, n_pts, tour, tree, heap)) {
+  while (two_opt_fast(pts, n_pts, tour, tree, heap)) {
       struct point* list_tour = pts;
       for (int i = 0; i < n_pts; i++) {
           best_tour[i] = list_tour->index;
