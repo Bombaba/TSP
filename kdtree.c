@@ -465,7 +465,7 @@ void nearby_points(const struct point* p, struct kdnode* node,
 }
 
 int search_nearby_points(const struct point* p, const struct kdtree* tree,
-                         struct kdheap* heap, double maxsqrdist, int maxsize)
+                         struct kdheap* heap, double maxdist, int maxsize)
 {
     if (tree->root == NULL || heap == NULL) return -1;
 
@@ -477,9 +477,9 @@ int search_nearby_points(const struct point* p, const struct kdtree* tree,
         heap->maxsize = tree->size;
     }
 
-    if (maxsqrdist < 0) maxsqrdist = DBL_MAX;
+    if (maxdist < 0) maxdist = DBL_MAX;
 
-    nearby_points(p, tree->root, heap, maxsqrdist);
+    nearby_points(p, tree->root, heap, maxdist * maxdist);
 
     return heap->length;
 } 

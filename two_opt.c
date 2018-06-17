@@ -1,20 +1,21 @@
 #include <stdbool.h>
 #include <float.h>
+#include <math.h>
 #include "kdtree.h"
 #include "point.h"
 #include "two_opt.h"
 
 #define SWAP(a, b) {int temp; temp = (a); (a) = (b); (b) = temp; }
 
-bool two_opt_fast(struct point pts[], int n_pts, int tour[],
+bool two_opt_fast(struct point pts[], int n_pts, double radius,
               struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     for (int i = 0; i < n_pts-2; i++) {
         struct point* pa = pts + i;
         struct point* pb = pa->next;
-        double dist_ab = metric(pa, pb);
-        search_nearby_points(pa, tree, heap, dist_ab, false);
+        double dist_ab = sqrt(metric(pa, pb));
+        search_nearby_points(pa, tree, heap, dist_ab+radius, false);
 
         double max_delta = 0;
         struct point* pc = NULL;
@@ -23,7 +24,8 @@ bool two_opt_fast(struct point pts[], int n_pts, int tour[],
             struct point* p1 = kdh_look(j, heap)->point;
             struct point* p2 = p1->next;
 
-            double delta = (dist_ab + metric(p1, p2)) - (metric(pa, p1) + metric(pb, p2));
+            double delta = (dist_ab + sqrt(metric(p1, p2)))
+                - (sqrt(metric(pa, p1)) + sqrt(metric(pb, p2)));
             if (delta > max_delta) {
                 success = true;
                 max_delta = delta;

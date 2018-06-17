@@ -10,6 +10,7 @@
 #include "ni.h"
 #include "test.h"
 #include "two_opt.h"
+#include "or_opt.h"
 
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
 
   build_list_from_tour(pts, n_pts, best_tour);
   struct kdheap* heap = create_kdheap(tree);
-  while (two_opt_fast(pts, n_pts, tour, tree, heap)) {
+  while (two_opt_fast(pts, n_pts, 0, tree, heap)) {
       struct point* list_tour = pts;
       for (int i = 0; i < n_pts; i++) {
           best_tour[i] = list_tour->index;
@@ -136,6 +137,22 @@ int main(int argc, char *argv[])
       write_tour_data(tourFileName, n_pts, best_tour);
       printf("\n%s: %lf\n", tourFileName, min_length);
   }
+
+  printf("\n########## Fast OR Opt ##########\n");
+  for (int len = 1; len <= n_pts/10; len++) {
+      while (or_opt(len, pts, n_pts, 0, tree, heap)) {
+          struct point* list_tour = pts;
+          for (int i = 0; i < n_pts; i++) {
+              best_tour[i] = list_tour->index;
+              list_tour = list_tour->next;
+          }
+          min_length = tour_length(pts, n_pts, best_tour);
+          sprintf(tourFileName, "tour%08d.dat", ++num);
+          write_tour_data(tourFileName, n_pts, best_tour);
+          printf("\n%s: %lf\n", tourFileName, min_length);
+      }
+  }
+
 
   //printf("\n########## Nearest Insertion ##########\n");
   //for (int start = 0; start < n_pts; start++) {
