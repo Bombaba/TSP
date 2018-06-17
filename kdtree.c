@@ -404,7 +404,8 @@ struct point* kdh_pop(struct kdheap* heap)
     return top.point;
 }
 
-struct kdnear* kdh_look(int ix, struct kdheap* heap) {
+struct kdnear* kdh_look(int ix, struct kdheap* heap)
+{
     if (ix > heap->length) return NULL;
     return heap->content + ix;
 }

@@ -116,6 +116,22 @@ int main(int argc, char *argv[])
       fflush(stdout);
   }
 
+  printf("\n########## Fast Two Opt ##########\n");
+
+  build_list_from_tour(pts, n_pts, best_tour);
+  struct kdheap* heap = create_kdheap(tree);
+  while (two_opt1(pts, n_pts, tour, tree, heap)) {
+      struct point* list_tour = pts;
+      for (int i = 0; i < n_pts; i++) {
+          best_tour[i] = list_tour->index;
+          list_tour = list_tour->next;
+      }
+      min_length = tour_length(pts, n_pts, best_tour);
+      sprintf(tourFileName, "tour%08d.dat", ++num);
+      write_tour_data(tourFileName, n_pts, best_tour);
+      printf("\n%s: %lf\n", tourFileName, min_length);
+  }
+
   //printf("\n########## Nearest Insertion ##########\n");
   //for (int start = 0; start < n_pts; start++) {
   //    struct point* list_tour = build_tour_ni(pts, n_pts, start, tree);

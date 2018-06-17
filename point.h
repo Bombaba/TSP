@@ -38,3 +38,4 @@ static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[
     pts[tour[n_pts-1]].next = &pts[tour[0]];
     pts[tour[0]].prev = &pts[tour[n_pts-1]];
 }
+
