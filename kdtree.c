@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include <float.h>
 #include "kdtree.h"
 #include "point.h"
 
-
-struct kdnode* find_min(struct kdnode* node, int dim);
 
 void ptree(const struct kdnode* node, int depth)
 {
@@ -48,6 +47,7 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
 {
     struct kdnode* shead = src->head;
     struct kdnode* dhead = (struct kdnode*) malloc(sizeof(struct kdnode) * src->size);
+    assert(dhead);
 
     for (int i = 0; i < src->size; i++) {
         dhead[i].point = shead[i].point;
@@ -59,6 +59,8 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
     }
 
     struct kdtree* dst = (struct kdtree*) malloc(sizeof(struct kdtree));
+    assert(dst);
+
     dst->head = dhead;
     dst->root = dst->head + src->root->point->index;
     dst->size = src->size;
@@ -117,7 +119,9 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     if (n_pts == 0) return NULL;
 
     struct point** p_pts = (struct point**) malloc(sizeof(struct point*) * n_pts);
-    struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_pts + 1);
+    assert(p_pts);
+    struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_pts);
+    assert(head);
     
     if (p_pts == NULL || head == NULL) return NULL;
 
@@ -134,6 +138,7 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     free(p_pts);
 
     struct kdtree* tree = (struct kdtree*) malloc(sizeof(struct kdtree));
+    assert(tree);
     tree->head = head;
     tree->root = root;
     tree->size = n_pts;
@@ -241,8 +246,8 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
             "         but point#%d was already removed.\n",
             pindex, pindex
         );
-        return false;
     }
+    assert(node->valid);
 
     remove_node(node, tree);
     return true;

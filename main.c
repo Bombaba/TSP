@@ -46,10 +46,12 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
                                                         // 読み飛ばす. 
   for(i=0;i<*np;i++) {                       // i=0 から i=(*np)-1まで
     if(fgets(buff,sizeof(buff),fp)!=NULL) 
-      sscanf(buff,"%d %d %d", &(p[i].index), &(p[i].x), &(p[i].y)); // i番目の点の座標を読み込む
+      sscanf(buff,"%*d %d %d", &(p[i].x), &(p[i].y)); // i番目の点の座標を読み込む
+      p[i].index = i;
       p[i].pos[0] = p[i].x;
       p[i].pos[1] = p[i].y;
       p[i].next = NULL;
+      p[i].prev = NULL;
   }                                 
 
   fclose(fp);
@@ -91,11 +93,14 @@ int main(int argc, char *argv[])
   }
 
   read_tsp_data(argv[1], pts, &n_pts);
+  //print_points(pts, n_pts);
+  //putchar('\n');
 
   int tour[MAX_N];
   int best_tour[MAX_N];
   double min_length = DBL_MAX;
   struct kdtree* tree = build_kdtree(pts, n_pts);
+  //print_kdtree(tree);
 
   int num = 0;
   char tourFileName[20];
@@ -152,6 +157,7 @@ int main(int argc, char *argv[])
   //}
 
   free_kdtree(tree);
+  free_kdheap(heap);
   printf("\n");
 
   return EXIT_SUCCESS;
