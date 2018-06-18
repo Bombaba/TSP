@@ -16,6 +16,9 @@
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
 
+int num = 0;
+char tourFileName[20];
+
 
 double dist(struct point p, struct point q) { // pとq の間の距離を計算 
   return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
@@ -83,6 +86,46 @@ void print_points(struct point pts[], int n_pts)
   }
 }
 
+bool calc_two_opt(struct point pts[], int n_pts, int tour[],
+                  struct kdtree* tree, struct kdheap* heap)
+{
+  bool success = false;
+  build_list_from_tour(pts, n_pts, tour);
+  while (two_opt(pts, n_pts, 0, tree, heap)) {
+      success = true;
+      struct point* list_tour = pts;
+      for (int i = 0; i < n_pts; i++) {
+          tour[i] = list_tour->index;
+          list_tour = list_tour->next;
+      }
+      double min_length = tour_length(pts, n_pts, tour);
+      sprintf(tourFileName, "tour%08d.dat", ++num);
+      write_tour_data(tourFileName, n_pts, tour);
+      printf("\n%s: %lf\n", tourFileName, min_length);
+  }
+  return success;
+}
+
+bool calc_or_opt(int len, struct point pts[], int n_pts, int tour[],
+                 struct kdtree* tree, struct kdheap* heap)
+{
+  bool success = false;
+  build_list_from_tour(pts, n_pts, tour);
+  while (or_opt(len, pts, n_pts, 0, tree, heap)) {
+      success = true;
+      struct point* list_tour = pts;
+      for (int i = 0; i < n_pts; i++) {
+          tour[i] = list_tour->index;
+          list_tour = list_tour->next;
+      }
+      double min_length = tour_length(pts, n_pts, tour);
+      sprintf(tourFileName, "tour%08d.dat", ++num);
+      write_tour_data(tourFileName, n_pts, tour);
+      printf("\n%s: %lf\n", tourFileName, min_length);
+  }
+  return success;
+}
+
 int main(int argc, char *argv[])
 {
   int n_pts;
@@ -101,16 +144,16 @@ int main(int argc, char *argv[])
   int best_tour[MAX_N];
   double min_length = DBL_MAX;
   struct kdtree* tree = build_kdtree(pts, n_pts);
+  struct kdheap* heap = create_kdheap(tree);
   //print_kdtree(tree);
 
-  int num = 0;
-  char tourFileName[20];
 
   printf("\n########## Nearest Neighbor ##########\n");
   for (int start = 0; start < n_pts; start++) {
       build_tour_nn(pts, n_pts, start, tour, tree);
 
       putchar('-');
+      fflush(stdout);
       double length = tour_length(pts, n_pts, tour);
       if (length < min_length) {
           min_length = length;
@@ -118,40 +161,71 @@ int main(int argc, char *argv[])
           sprintf(tourFileName, "tour%08d.dat", ++num);
           write_tour_data(tourFileName, n_pts, best_tour);
           printf("\n%s: %lf\n", tourFileName, length);
-      }
-      fflush(stdout);
-  }
 
-  printf("\n########## Fast Two Opt ##########\n");
-
-  build_list_from_tour(pts, n_pts, best_tour);
-  struct kdheap* heap = create_kdheap(tree);
-  while (two_opt_fast(pts, n_pts, 0, tree, heap)) {
-      struct point* list_tour = pts;
-      for (int i = 0; i < n_pts; i++) {
-          best_tour[i] = list_tour->index;
-          list_tour = list_tour->next;
-      }
-      min_length = tour_length(pts, n_pts, best_tour);
-      sprintf(tourFileName, "tour%08d.dat", ++num);
-      write_tour_data(tourFileName, n_pts, best_tour);
-      printf("\n%s: %lf\n", tourFileName, min_length);
-  }
-
-  printf("\n########## Fast OR Opt ##########\n");
-  for (int len = 1; len <= n_pts/10; len++) {
-      while (or_opt(len, pts, n_pts, 0, tree, heap)) {
-          struct point* list_tour = pts;
-          for (int i = 0; i < n_pts; i++) {
-              best_tour[i] = list_tour->index;
-              list_tour = list_tour->next;
-          }
-          min_length = tour_length(pts, n_pts, best_tour);
-          sprintf(tourFileName, "tour%08d.dat", ++num);
-          write_tour_data(tourFileName, n_pts, best_tour);
-          printf("\n%s: %lf\n", tourFileName, min_length);
       }
   }
+
+  bool success;
+  int count = 0;
+  do {
+      printf("\n########## Opt #%d ##########\n", ++count);
+
+      success = false;
+      //printf("\n########## 2-Opt ##########\n");
+      success = calc_two_opt(pts, n_pts, best_tour, tree, heap);
+
+      for (int i = 1; i <= 10; i++) {
+          //printf("\n########## OR-Opt %d ##########\n", i);
+          success |= calc_or_opt(i, pts, n_pts, best_tour, tree, heap);
+      }
+  } while (success);
+
+
+  //printf("\n########## Nearest Neighbor2 ##########\n");
+  //for (int start = 0; start < n_pts; start++) {
+  //    build_tour_nn2(pts, n_pts, start, tour, tree, heap);
+
+  //    putchar('-');
+  //    double length = tour_length(pts, n_pts, tour);
+  //    if (length < min_length) {
+  //        min_length = length;
+  //        memcpy(best_tour, tour, sizeof(int) * n_pts);
+  //        sprintf(tourFileName, "tour%08d.dat", ++num);
+  //        write_tour_data(tourFileName, n_pts, best_tour);
+  //        printf("\n%s: %lf\n", tourFileName, length);
+  //    }
+  //    fflush(stdout);
+  //}
+
+  //printf("\n########## 2-Opt ##########\n");
+
+  //build_list_from_tour(pts, n_pts, best_tour);
+  //while (two_opt(pts, n_pts, 0, tree, heap)) {
+  //    struct point* list_tour = pts;
+  //    for (int i = 0; i < n_pts; i++) {
+  //        best_tour[i] = list_tour->index;
+  //        list_tour = list_tour->next;
+  //    }
+  //    min_length = tour_length(pts, n_pts, best_tour);
+  //    sprintf(tourFileName, "tour%08d.dat", ++num);
+  //    write_tour_data(tourFileName, n_pts, best_tour);
+  //    printf("\n%s: %lf\n", tourFileName, min_length);
+  //}
+
+  //printf("\n########## OR-Opt ##########\n");
+  //for (int len = 1; len <= n_pts/10; len++) {
+  //    while (or_opt(len, pts, n_pts, 0, tree, heap)) {
+  //        struct point* list_tour = pts;
+  //        for (int i = 0; i < n_pts; i++) {
+  //            best_tour[i] = list_tour->index;
+  //            list_tour = list_tour->next;
+  //        }
+  //        min_length = tour_length(pts, n_pts, best_tour);
+  //        sprintf(tourFileName, "tour%08d.dat", ++num);
+  //        write_tour_data(tourFileName, n_pts, best_tour);
+  //        printf("\n%s: %lf\n", tourFileName, min_length);
+  //    }
+  //}
 
 
   //printf("\n########## Nearest Insertion ##########\n");

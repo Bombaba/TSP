@@ -7,8 +7,8 @@
 
 #define SWAP(a, b) {int temp; temp = (a); (a) = (b); (b) = temp; }
 
-bool two_opt_fast(struct point pts[], int n_pts, double radius,
-              struct kdtree* tree, struct kdheap* heap)
+bool two_opt(struct point pts[], int n_pts, double radius,
+             const struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     for (int i = 0; i < n_pts-2; i++) {
