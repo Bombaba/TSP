@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
-
 #include <float.h>
+
 #include "kdtree.h"
 #include "point.h"
 

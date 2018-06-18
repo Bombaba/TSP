@@ -5,8 +5,6 @@
 #include "point.h"
 #include "two_opt.h"
 
-#define SWAP(a, b) {int temp; temp = (a); (a) = (b); (b) = temp; }
-
 bool two_opt(struct point pts[], int n_pts, double radius,
              const struct kdtree* tree, struct kdheap* heap)
 {
