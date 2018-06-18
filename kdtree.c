@@ -100,7 +100,11 @@ struct kdnode* build_subtree(struct kdnode nodes[], struct point* p_pts[], int n
     } else {
         qsort(p_pts, n_pts, sizeof(struct point*), key_compare_y);
     }
+
     int mid = n_pts / 2;
+    //for (int i = mid+1; i < n_pts; i++) {
+    //    if (p_pts[i-1]->pos[dim] == p_pts[i]->pos[dim]) mid++;
+    //}
     struct kdnode* nd = &nodes[p_pts[mid]->index];
 
     nd->dim = dim;
