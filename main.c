@@ -86,12 +86,12 @@ void print_points(struct point pts[], int n_pts)
   }
 }
 
-bool calc_two_opt(struct point pts[], int n_pts, int tour[],
+bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
                   struct kdtree* tree, struct kdheap* heap)
 {
   bool success = false;
   build_list_from_tour(pts, n_pts, tour);
-  while (two_opt(pts, n_pts, 0, tree, heap)) {
+  while (two_opt(pts, n_pts, radius, tree, heap)) {
       success = true;
       struct point* list_tour = pts;
       for (int i = 0; i < n_pts; i++) {
@@ -106,12 +106,12 @@ bool calc_two_opt(struct point pts[], int n_pts, int tour[],
   return success;
 }
 
-bool calc_or_opt(int len, struct point pts[], int n_pts, int tour[],
+bool calc_or_opt(int len, double radius, struct point pts[], int n_pts, int tour[],
                  struct kdtree* tree, struct kdheap* heap)
 {
   bool success = false;
   build_list_from_tour(pts, n_pts, tour);
-  while (or_opt(len, pts, n_pts, 0, tree, heap)) {
+  while (or_opt(len, pts, n_pts, radius, tree, heap)) {
       success = true;
       struct point* list_tour = pts;
       for (int i = 0; i < n_pts; i++) {
@@ -168,16 +168,15 @@ int main(int argc, char *argv[])
   bool success;
   int count = 0;
   do {
-      printf("\n########## Opt #%d ##########\n", ++count);
+      printf("\n########## Opt #%d ##########\n", count);
 
       success = false;
-      //printf("\n########## 2-Opt ##########\n");
-      success = calc_two_opt(pts, n_pts, best_tour, tree, heap);
 
+      success = calc_two_opt(10*count, pts, n_pts, best_tour, tree, heap);
       for (int i = 1; i <= 10; i++) {
-          //printf("\n########## OR-Opt %d ##########\n", i);
-          success |= calc_or_opt(i, pts, n_pts, best_tour, tree, heap);
+          success |= calc_or_opt(i, 10*count, pts, n_pts, best_tour, tree, heap);
       }
+      count++;
   } while (success);
 
 
