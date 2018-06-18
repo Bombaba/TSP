@@ -144,6 +144,12 @@ int main(int argc, char *argv[])
     //int best_tour[MAX_N];
     //print_kdtree(tree);
 
+    int opt_max = n_pts < 100 ? n_pts/10 : 10;
+
+    if (n_pts < 100) {
+        opt_max = n_pts / 10;
+    }
+
     for (int start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
@@ -155,7 +161,7 @@ int main(int argc, char *argv[])
         do {
             success = false;
             success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= 10; i++) {
+            for (int i = 1; i <= opt_max; i++) {
                 success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
             }
             count++;
