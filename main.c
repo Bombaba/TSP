@@ -146,15 +146,41 @@ int main(int argc, char *argv[])
 
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
 
-    if (n_pts < 100) {
-        opt_max = n_pts / 10;
-    }
-
+    printf("NN 1\n");
     for (int start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
 
         build_tour_nn(pts, n_pts, start, tour, tree);
+
+        bool success;
+        int count = 0;
+        do {
+            success = false;
+            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            for (int i = 1; i <= opt_max; i++) {
+                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+            }
+            count++;
+        } while (success);
+
+        double length = tour_length(pts, n_pts, tour);
+        if (length < min_length) {
+            min_length = length;
+            //memcpy(best_tour, tour, sizeof(int) * n_pts);
+            sprintf(tourFileName, "tour%08d.dat", ++num);
+            write_tour_data(tourFileName, n_pts, tour);
+            printf("\n%s: %lf\n", tourFileName, min_length);
+
+        }
+    }
+
+    printf("\nNN 2\n");
+    for (int start = 0; start < n_pts; start++) {
+        putchar('-');
+        fflush(stdout);
+
+        build_tour_nn2(pts, n_pts, start, tour, tree, heap);
 
         bool success;
         int count = 0;
