@@ -11,6 +11,7 @@
 #include "test.h"
 #include "two_opt.h"
 #include "or_opt.h"
+#include "shape.h"
 
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
@@ -127,6 +128,7 @@ int main(int argc, char *argv[])
 {
     int n_pts;
     struct point pts[MAX_N];
+    struct point pts2[MAX_N];
 
     if(argc != 2) {
         fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
@@ -134,15 +136,20 @@ int main(int argc, char *argv[])
     }
 
     read_tsp_data(argv[1], pts, &n_pts);
+
+    shape_map(pts, n_pts, pts2, 100, 0.6);
+
     //print_points(pts, n_pts);
     //putchar('\n');
 
     int tour[MAX_N];
     double min_length = DBL_MAX;
     struct kdtree* tree = build_kdtree(pts, n_pts);
+    struct kdtree* tree2 = build_kdtree(pts2, n_pts);
     struct kdheap* heap = create_kdheap(tree);
     //int best_tour[MAX_N];
     //print_kdtree(tree);
+
 
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
 
@@ -151,7 +158,7 @@ int main(int argc, char *argv[])
         putchar('-');
         fflush(stdout);
 
-        build_tour_nn(pts, n_pts, start, tour, tree);
+        build_tour_nn(pts2, n_pts, start, tour, tree2);
 
         bool success;
         int count = 0;
@@ -203,6 +210,9 @@ int main(int argc, char *argv[])
 
         }
     }
+
+
+
 
     free_kdtree(tree);
     free_kdheap(heap);
