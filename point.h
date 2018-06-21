@@ -7,6 +7,7 @@
 
 struct point {
     int index;
+	int original_index;
     int x;
     int y;
     int pos[2];
@@ -17,6 +18,7 @@ struct point {
 static inline void copy_point(struct point* origin, struct point* copy)
 {
 	copy->index = origin->index;
+	copy->original_index = origin->original_index;
 	copy->x = origin->x;
 	copy->y = origin->y;
 	copy->pos[0] = origin->pos[0];
