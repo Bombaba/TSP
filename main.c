@@ -211,8 +211,34 @@ int main(int argc, char *argv[])
         }
     }
 
+    printf("\nNN 3\n");
+    for (int start = 0; start < n_pts; start++) {
+        putchar('-');
+        fflush(stdout);
 
+        build_tour_nn(pts, n_pts, start, tour, tree);
 
+        bool success;
+        int count = 0;
+        do {
+            success = false;
+            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            for (int i = 1; i <= opt_max; i++) {
+                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+            }
+            count++;
+        } while (success);
+
+        double length = tour_length(pts, n_pts, tour);
+        if (length < min_length) {
+            min_length = length;
+            //memcpy(best_tour, tour, sizeof(int) * n_pts);
+            sprintf(tourFileName, "tour%08d.dat", ++num);
+            write_tour_data(tourFileName, n_pts, tour);
+            printf("\n%s: %lf\n", tourFileName, min_length);
+
+        }
+    }
 
     free_kdtree(tree);
     free_kdheap(heap);
