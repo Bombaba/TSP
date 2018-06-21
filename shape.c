@@ -2,14 +2,15 @@
 
 #include "shape.h"
 #include "kdtree.h"
+#include "evaluate.h"
 
-double optimize_reduce_thre(struct point pts[], int n_pts, const struct kdtree* tree)
+double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, double rate)
 {
 	int i, sum;
 	int distribution[1000];
 	struct point *current, *nearest;
 	struct kdtree* tree_copy;
-	double tmp = (n_pts / 1000) * 0.1 + 0.2;
+	double tmp = (n_pts / 1000) * 0.1 + rate;
     if (tree == NULL) {
         tree_copy = build_kdtree(pts, n_pts);
     } else {
@@ -55,7 +56,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 	}
 
 	if(thre < 0)
-		thre = optimize_reduce_thre(pts, n_pts, tree);
+		thre = optimize_thre(pts, n_pts, tree, 0.2);
 
 	copy_point(&pts[0], &list[0]);
 	list[0].prev = &start; start.next = &list[0];
@@ -204,9 +205,20 @@ void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double gr
 {
 	int i, j, n, s_x, s_y, s_m;
 	int mass[n_pts];
+	struct kdtree *tree = NULL;
 
 	for(i=0;i<n_pts;i++)
 		copy_point(&pts[i], &copy_pts[i]);
+
+	if(grv_thre == 0.0 || alpha == 0.0)
+		return;
+
+	if(grv_thre < 0) {
+		//grv_thre = optimize_thre(pts, n_pts, tree, 0.6);
+		double mean, hoge;
+		calc_distribution_param(pts, n_pts, tree, &mean, &hoge, &hoge, &hoge);
+		grv_thre = (int)mean + 1;
+	}
 
 	for(i=0;i<n_pts;i++) {
 		mass[i] = 0;
@@ -237,8 +249,10 @@ void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double gr
 		}
 		//printf("n=%d\n", n);
 
-		copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x);
-		copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y);
+		//copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x);
+		//copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y);
+		copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x) / sqrt(n);
+		copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y) / sqrt(n);
 		copy_pts[i].pos[0] = copy_pts[i].x;
 		copy_pts[i].pos[1] = copy_pts[i].y;
 	}
