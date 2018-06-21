@@ -22,14 +22,14 @@ char tourFileName[20];
 
 
 double dist(struct point p, struct point q) { // pとq の間の距離を計算 
-  return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
+	return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
 
 double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
-  int i;
-  double sum=0.0;
-  for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
-  return sum;// 総距離が関数の戻り値
+	int i;
+	double sum=0.0;
+	for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
+	return sum;// 総距離が関数の戻り値
 }
 
 void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
@@ -63,20 +63,20 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
 }
 
 void write_tour_data(char *filename, int n, int tour[MAX_N]){
-  FILE *fp; 
-  int i;
- 
- // 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
-  if((fp=fopen(filename,"wt"))==NULL){ 
-    fprintf(stderr,"Error: File %s open failed.\n",filename);
-    exit(EXIT_FAILURE);
-  }
-  fprintf(fp,"%d\n",n);
-  for(i=0;i<n; i++){
-   fprintf(fp,"%d ",tour[i]);
-  }
-  fprintf(fp,"\n");
-  fclose(fp);
+	FILE *fp; 
+	int i;
+
+	// 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
+	if((fp=fopen(filename,"wt"))==NULL){ 
+		fprintf(stderr,"Error: File %s open failed.\n",filename);
+		exit(EXIT_FAILURE);
+	}
+	fprintf(fp,"%d\n",n);
+	for(i=0;i<n; i++){
+		fprintf(fp,"%d ",tour[i]);
+	}
+	fprintf(fp,"\n");
+	fclose(fp);
 }
 
 void print_points(struct point pts[], int n_pts)
@@ -142,18 +142,20 @@ int main(int argc, char *argv[])
 
     read_tsp_data(argv[1], pts, &n_pts);
 
-    shape_map(pts, n_pts, pts2, 100, 0.6);
-
-    //print_points(pts, n_pts);
-    //putchar('\n');
-
     int tour[MAX_N];
+    int best_tour[MAX_N];
     double min_length = DBL_MAX;
+
     struct kdtree* tree = build_kdtree(pts, n_pts);
-    struct kdtree* tree2 = build_kdtree(pts2, n_pts);
     struct kdheap* heap = create_kdheap(tree);
-    //int best_tour[MAX_N];
-    //print_kdtree(tree);
+
+
+    printf("\n############# Shaping Map ############\n");
+    struct point shaped_pts[MAX_N];
+    //for(int i=0;i<n_pts;i++) copy_point(&pts[i], &shaped_pts[i]);
+    shape_map(pts, n_pts, shaped_pts, 100.0, 0.7);
+
+    struct kdtree* tree_shaped = build_kdtree(shaped_pts, n_pts);
 
 
     const double FACTOR = 1.3;
@@ -165,7 +167,7 @@ int main(int argc, char *argv[])
         putchar('-');
         fflush(stdout);
 
-        build_tour_nn(pts2, n_pts, start, tour, tree2);
+        build_tour_nn(shaped_pts, n_pts, start, tour, tree_shaped);
 
         bool success;
         int count = 0;

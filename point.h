@@ -7,12 +7,25 @@
 
 struct point {
     int index;
+    int original_index;
     int x;
     int y;
     int pos[2];
     struct point* next;
     struct point* prev;
 };
+
+static inline void copy_point(struct point* origin, struct point* copy)
+{
+	copy->index = origin->index;
+	copy->original_index = origin->original_index;
+	copy->x = origin->x;
+	copy->y = origin->y;
+	copy->pos[0] = origin->pos[0];
+	copy->pos[1] = origin->pos[1];
+	copy->next = origin->next;
+	copy->prev = origin->prev;
+}
 
 static inline void insert(struct point* a, struct point* b, struct point* c)
 {
@@ -51,13 +64,3 @@ static inline void shuffle(int *array, int n)
     }
 }
 
-static inline void copy_point(struct point* origin, struct point* copy)
-{
-        copy->index = origin->index;
-        copy->x = origin->x;
-        copy->y = origin->y;
-        copy->pos[0] = origin->pos[0];
-        copy->pos[1] = origin->pos[1];
-        copy->next = origin->next;
-        copy->prev = origin->prev;
-}

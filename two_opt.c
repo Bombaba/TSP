@@ -31,6 +31,7 @@ bool two_opt(struct point pts[], int n_pts, double factor, double add,
                 max_delta = delta;
                 pc = p1;
                 pd = p2;
+                //break;
             }
         }
         if (pc) {

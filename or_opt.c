@@ -50,6 +50,7 @@ bool or_opt(int n, struct point pts[], int n_pts, double factor, double add,
                 max_delta = delta;
                 px = p1;
                 py = p2;
+                //break;
             }
         }
         if (px) {
