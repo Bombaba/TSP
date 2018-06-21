@@ -58,7 +58,8 @@ static inline double metric(const struct point* p, const struct point* q)
 
 static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[])
 {
-    for (int i = 0; i < n_pts-1; i++) {
+    int i;
+    for (i = 0; i < n_pts-1; i++) {
         pts[tour[i]].next = &pts[tour[i+1]];
         pts[tour[i+1]].prev = &pts[tour[i]];
     }
@@ -68,8 +69,9 @@ static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[
 
 static inline void shuffle(int *array, int n)
 {
+    int i;
     if (n > 1) {
-        for (int i = 0; i < n-1; i++) {
+        for (i = 0; i < n-1; i++) {
             int j = i + rand() / (RAND_MAX / (n - 1) + 1);
             int temp = array[j];
             array[j] = array[i];
@@ -93,7 +95,8 @@ void ptree(const struct kdnode* node, int depth)
 {
     if (node == NULL) return;
 
-    for (int i = 0; i < depth; i++) {
+    int i;
+    for (i = 0; i < depth; i++) {
         printf("| ");
     }
 
@@ -129,7 +132,8 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
     struct kdnode* dhead = (struct kdnode*) malloc(sizeof(struct kdnode) * src->size);
     assert(dhead);
 
-    for (int i = 0; i < src->size; i++) {
+    int i;
+    for (i = 0; i < src->size; i++) {
         dhead[i].point = shead[i].point;
         dhead[i].left = shead[i].left ? (dhead + (shead[i].left - shead)) : NULL;
         dhead[i].right = shead[i].right ? (dhead + (shead[i].right - shead)) : NULL;
@@ -209,7 +213,8 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     
     if (p_pts == NULL || head == NULL) return NULL;
 
-    for (int i = 0; i < n_pts; i++) {
+    int i;
+    for (i = 0; i < n_pts; i++) {
         p_pts[i] = pts + i;
         head[i].point = pts + i;
         head[i].left = NULL;
@@ -699,7 +704,8 @@ void build_tour_nn2(struct point pts[], int n_pts, int ixstart, int tour[],
             sqrt(metric(current, nearest))*1.1, false);
 
         double score_max = -DBL_MAX;
-        for (int j = 0; j < heap->length; j++) {
+        int j;
+        for (j = 0; j < heap->length; j++) {
             struct point* p = kdh_look(j, heap)->point;
 
             vec2 = get_direction(current, p);
@@ -722,7 +728,8 @@ bool two_opt(struct point pts[], int n_pts, double radius,
              const struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
-    for (int i = 0; i < n_pts-2; i++) {
+    int i;
+    for (i = 0; i < n_pts-2; i++) {
         struct point* pa = pts + i;
         struct point* pb = pa->next;
         double dist_ab = sqrt(metric(pa, pb));
@@ -731,7 +738,8 @@ bool two_opt(struct point pts[], int n_pts, double radius,
         double max_delta = 0;
         struct point* pc = NULL;
         struct point* pd = NULL;
-        for (int j = 0; j < heap->length; j++) {
+        int j;
+        for (j = 0; j < heap->length; j++) {
             struct point* p1 = kdh_look(j, heap)->point;
             struct point* p2 = p1->next;
 
@@ -768,13 +776,15 @@ bool or_opt(int n, struct point pts[], int n_pts, double radius,
             struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
-    for (int i = 0; i < n_pts; i++) {
+    int i;
+    for (i = 0; i < n_pts; i++) {
         struct point* pa1 = pts + i;
         struct point* pb = pa1->prev;
         double dist_ba = sqrt(metric(pb, pa1));
 
         struct point* pa2 = pa1;
-        for (int j = 0; j < n-1; j++) pa2 = pa2->next;
+        int j;
+        for (j = 0; j < n-1; j++) pa2 = pa2->next;
         struct point* pc = pa2->next;
         double dist_ac = sqrt(metric(pa2, pc));
 
@@ -786,7 +796,7 @@ bool or_opt(int n, struct point pts[], int n_pts, double radius,
         struct point* py = NULL;
         double dist_bac = dist_ba + dist_ac;
         double dist_bc = sqrt(metric(pb, pc));
-        for (int j = 0; j < heap->length; j++) {
+        for (j = 0; j < heap->length; j++) {
             struct point* p1 = kdh_look(j, heap)->point;
             struct point* p2 = p1->prev;
 
@@ -901,7 +911,8 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 
 void print_points(struct point pts[], int n_pts)
 {
-  for (int i = 0; i < n_pts; i++)
+  int i;
+  for (i = 0; i < n_pts; i++)
   {
     printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
   }
@@ -917,7 +928,8 @@ bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
     }
     if (success) {
         struct point* list_tour = pts;
-        for (int i = 0; i < n_pts; i++) {
+        int i;
+        for (i = 0; i < n_pts; i++) {
             tour[i] = list_tour->index;
             list_tour = list_tour->next;
         }
@@ -936,7 +948,8 @@ bool calc_or_opt(int len, double radius, struct point pts[], int n_pts, int tour
     }
     if (success) {
         struct point* list_tour = pts;
-        for (int i = 0; i < n_pts; i++) {
+        int i;
+        for (i = 0; i < n_pts; i++) {
             tour[i] = list_tour->index;
             list_tour = list_tour->next;
         }
@@ -974,7 +987,8 @@ int main(int argc, char *argv[])
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
 
     printf("NN 1\n");
-    for (int start = 0; start < n_pts; start++) {
+    int start;
+    for (start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
 
@@ -985,7 +999,8 @@ int main(int argc, char *argv[])
         do {
             success = false;
             success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= opt_max; i++) {
+            int i;
+            for (i = 1; i <= opt_max; i++) {
                 success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
             }
             count++;
@@ -1003,7 +1018,7 @@ int main(int argc, char *argv[])
     }
 
     printf("\nNN 2\n");
-    for (int start = 0; start < n_pts; start++) {
+    for (start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
 
@@ -1014,7 +1029,8 @@ int main(int argc, char *argv[])
         do {
             success = false;
             success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= opt_max; i++) {
+            int i;
+            for (i = 1; i <= opt_max; i++) {
                 success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
             }
             count++;
@@ -1031,7 +1047,35 @@ int main(int argc, char *argv[])
         }
     }
 
+    printf("\nNN 3\n");
+    for (start = 0; start < n_pts; start++) {
+        putchar('-');
+        fflush(stdout);
 
+        build_tour_nn(pts, n_pts, start, tour, tree);
+
+        bool success;
+        int count = 0;
+        do {
+            success = false;
+            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            int i;
+            for (i = 1; i <= opt_max; i++) {
+                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+            }
+            count++;
+        } while (success);
+
+        double length = tour_length(pts, n_pts, tour);
+        if (length < min_length) {
+            min_length = length;
+            //memcpy(best_tour, tour, sizeof(int) * n_pts);
+            sprintf(tourFileName, "tour%08d.dat", ++num);
+            write_tour_data(tourFileName, n_pts, tour);
+            printf("\n%s: %lf\n", tourFileName, min_length);
+
+        }
+    }
 
 
     free_kdtree(tree);
