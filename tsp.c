@@ -724,7 +724,7 @@ void build_tour_nn2(struct point pts[], int n_pts, int ixstart, int tour[],
     free_kdtree(tree_copy);
 }
 
-bool two_opt(struct point pts[], int n_pts, double radius,
+bool two_opt(struct point pts[], int n_pts, double factor,
              const struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
@@ -733,7 +733,7 @@ bool two_opt(struct point pts[], int n_pts, double radius,
         struct point* pa = pts + i;
         struct point* pb = pa->next;
         double dist_ab = sqrt(metric(pa, pb));
-        search_nearby_points(pa, tree, heap, dist_ab+radius, false);
+        search_nearby_points(pa, tree, heap, dist_ab*factor, false);
 
         double max_delta = 0;
         struct point* pc = NULL;
@@ -772,7 +772,7 @@ bool two_opt(struct point pts[], int n_pts, double radius,
     return success;
 }
 
-bool or_opt(int n, struct point pts[], int n_pts, double radius,
+bool or_opt(int n, struct point pts[], int n_pts, double factor,
             struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
@@ -789,7 +789,7 @@ bool or_opt(int n, struct point pts[], int n_pts, double radius,
         double dist_ac = sqrt(metric(pa2, pc));
 
         double longer = dist_ba > dist_ac ? dist_ba : dist_ac;
-        search_nearby_points(pa1, tree, heap, longer+radius, false);
+        search_nearby_points(pa1, tree, heap, longer*factor, false);
 
         double max_delta = 0;
         struct point* px = NULL;
@@ -918,12 +918,12 @@ void print_points(struct point pts[], int n_pts)
   }
 }
 
-bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
+bool calc_two_opt(double factor, struct point pts[], int n_pts, int tour[],
                   struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     build_list_from_tour(pts, n_pts, tour);
-    while (two_opt(pts, n_pts, radius, tree, heap)) {
+    while (two_opt(pts, n_pts, factor, tree, heap)) {
         success = true;
     }
     if (success) {
@@ -938,12 +938,12 @@ bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
     return success;
 }
 
-bool calc_or_opt(int len, double radius, struct point pts[], int n_pts, int tour[],
+bool calc_or_opt(int len, double factor, struct point pts[], int n_pts, int tour[],
                  struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     build_list_from_tour(pts, n_pts, tour);
-    while (or_opt(len, pts, n_pts, radius, tree, heap)) {
+    while (or_opt(len, pts, n_pts, factor, tree, heap)) {
         success = true;
     }
     if (success) {
@@ -984,6 +984,7 @@ int main(int argc, char *argv[])
     //print_kdtree(tree);
 
 
+    double FACTOR = 1.4;
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
 
     printf("NN 1\n");
@@ -998,10 +999,10 @@ int main(int argc, char *argv[])
         int count = 0;
         do {
             success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            success |= calc_two_opt(FACTOR, pts, n_pts, tour, tree, heap);
             int i;
             for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+                success |= calc_or_opt(i, FACTOR, pts, n_pts, tour, tree, heap);
             }
             count++;
         } while (success);
@@ -1028,10 +1029,10 @@ int main(int argc, char *argv[])
         int count = 0;
         do {
             success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            success |= calc_two_opt(FACTOR, pts, n_pts, tour, tree, heap);
             int i;
             for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+                success |= calc_or_opt(i, FACTOR, pts, n_pts, tour, tree, heap);
             }
             count++;
         } while (success);
@@ -1058,10 +1059,10 @@ int main(int argc, char *argv[])
         int count = 0;
         do {
             success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
+            success |= calc_two_opt(FACTOR, pts, n_pts, tour, tree, heap);
             int i;
             for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+                success |= calc_or_opt(i, FACTOR, pts, n_pts, tour, tree, heap);
             }
             count++;
         } while (success);
@@ -1076,7 +1077,6 @@ int main(int argc, char *argv[])
 
         }
     }
-
 
     free_kdtree(tree);
     free_kdheap(heap);

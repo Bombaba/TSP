@@ -13,7 +13,8 @@ void ptree(const struct kdnode* node, int depth)
 {
     if (node == NULL) return;
 
-    for (int i = 0; i < depth; i++) {
+    int i;
+    for (i = 0; i < depth; i++) {
         printf("| ");
     }
 
@@ -49,7 +50,8 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
     struct kdnode* dhead = (struct kdnode*) malloc(sizeof(struct kdnode) * src->size);
     assert(dhead);
 
-    for (int i = 0; i < src->size; i++) {
+    int i;
+    for (i = 0; i < src->size; i++) {
         dhead[i].point = shead[i].point;
         dhead[i].left = shead[i].left ? (dhead + (shead[i].left - shead)) : NULL;
         dhead[i].right = shead[i].right ? (dhead + (shead[i].right - shead)) : NULL;
@@ -129,7 +131,8 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     
     if (p_pts == NULL || head == NULL) return NULL;
 
-    for (int i = 0; i < n_pts; i++) {
+    int i;
+    for (i = 0; i < n_pts; i++) {
         p_pts[i] = pts + i;
         head[i].point = pts + i;
         head[i].left = NULL;

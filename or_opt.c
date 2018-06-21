@@ -3,29 +3,31 @@
 #include "point.h"
 #include "kdtree.h"
 
-bool or_opt(int n, struct point pts[], int n_pts, double radius,
+bool or_opt(int n, struct point pts[], int n_pts, double factor, double add,
             struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
-    for (int i = 0; i < n_pts; i++) {
+    int i;
+    for (i = 0; i < n_pts; i++) {
         struct point* pa1 = pts + i;
         struct point* pb = pa1->prev;
         double dist_ba = sqrt(metric(pb, pa1));
 
         struct point* pa2 = pa1;
-        for (int j = 0; j < n-1; j++) pa2 = pa2->next;
+        int j;
+        for (j = 0; j < n-1; j++) pa2 = pa2->next;
         struct point* pc = pa2->next;
         double dist_ac = sqrt(metric(pa2, pc));
 
         double longer = dist_ba > dist_ac ? dist_ba : dist_ac;
-        search_nearby_points(pa1, tree, heap, longer+radius, false);
+        search_nearby_points(pa1, tree, heap, longer*factor+add, false);
 
         double max_delta = 0;
         struct point* px = NULL;
         struct point* py = NULL;
         double dist_bac = dist_ba + dist_ac;
         double dist_bc = sqrt(metric(pb, pc));
-        for (int j = 0; j < heap->length; j++) {
+        for (j = 0; j < heap->length; j++) {
             struct point* p1 = kdh_look(j, heap)->point;
             struct point* p2 = p1->prev;
 

@@ -81,23 +81,26 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 
 void print_points(struct point pts[], int n_pts)
 {
-  for (int i = 0; i < n_pts; i++)
+  int i;
+  for (i = 0; i < n_pts; i++)
   {
     printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
   }
 }
 
-bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
+bool calc_two_opt(double factor, double add,
+                  struct point pts[], int n_pts, int tour[],
                   struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     build_list_from_tour(pts, n_pts, tour);
-    while (two_opt(pts, n_pts, radius, tree, heap)) {
+    while (two_opt(pts, n_pts, factor, add, tree, heap)) {
         success = true;
     }
     if (success) {
         struct point* list_tour = pts;
-        for (int i = 0; i < n_pts; i++) {
+        int i;
+        for (i = 0; i < n_pts; i++) {
             tour[i] = list_tour->index;
             list_tour = list_tour->next;
         }
@@ -106,17 +109,19 @@ bool calc_two_opt(double radius, struct point pts[], int n_pts, int tour[],
     return success;
 }
 
-bool calc_or_opt(int len, double radius, struct point pts[], int n_pts, int tour[],
+bool calc_or_opt(int len, double factor, double add,
+                 struct point pts[], int n_pts, int tour[],
                  struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
     build_list_from_tour(pts, n_pts, tour);
-    while (or_opt(len, pts, n_pts, radius, tree, heap)) {
+    while (or_opt(len, pts, n_pts, factor, add, tree, heap)) {
         success = true;
     }
     if (success) {
         struct point* list_tour = pts;
-        for (int i = 0; i < n_pts; i++) {
+        int i;
+        for (i = 0; i < n_pts; i++) {
             tour[i] = list_tour->index;
             list_tour = list_tour->next;
         }
@@ -151,10 +156,12 @@ int main(int argc, char *argv[])
     //print_kdtree(tree);
 
 
+    const double FACTOR = 1.3;
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
 
     printf("NN 1\n");
-    for (int start = 0; start < n_pts; start++) {
+    int start;
+    for (start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
 
@@ -164,9 +171,10 @@ int main(int argc, char *argv[])
         int count = 0;
         do {
             success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+            success |= calc_two_opt(FACTOR, 10*count, pts, n_pts, tour, tree, heap);
+            int i;
+            for (i = 1; i <= opt_max; i++) {
+                success |= calc_or_opt(i, FACTOR, 10*count, pts, n_pts, tour, tree, heap);
             }
             count++;
         } while (success);
@@ -183,7 +191,7 @@ int main(int argc, char *argv[])
     }
 
     printf("\nNN 2\n");
-    for (int start = 0; start < n_pts; start++) {
+    for (start = 0; start < n_pts; start++) {
         putchar('-');
         fflush(stdout);
 
@@ -193,38 +201,10 @@ int main(int argc, char *argv[])
         int count = 0;
         do {
             success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
-            }
-            count++;
-        } while (success);
-
-        double length = tour_length(pts, n_pts, tour);
-        if (length < min_length) {
-            min_length = length;
-            //memcpy(best_tour, tour, sizeof(int) * n_pts);
-            sprintf(tourFileName, "tour%08d.dat", ++num);
-            write_tour_data(tourFileName, n_pts, tour);
-            printf("\n%s: %lf\n", tourFileName, min_length);
-
-        }
-    }
-
-    printf("\nNN 3\n");
-    for (int start = 0; start < n_pts; start++) {
-        putchar('-');
-        fflush(stdout);
-
-        build_tour_nn(pts, n_pts, start, tour, tree);
-
-        bool success;
-        int count = 0;
-        do {
-            success = false;
-            success |= calc_two_opt(5*count, pts, n_pts, tour, tree, heap);
-            for (int i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, 5*count, pts, n_pts, tour, tree, heap);
+            success |= calc_two_opt(FACTOR, 10*count, pts, n_pts, tour, tree, heap);
+            int i;
+            for (i = 1; i <= opt_max; i++) {
+                success |= calc_or_opt(i, FACTOR, 10*count, pts, n_pts, tour, tree, heap);
             }
             count++;
         } while (success);

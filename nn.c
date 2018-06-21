@@ -87,7 +87,8 @@ void build_tour_nn2(struct point pts[], int n_pts, int ixstart, int tour[],
             sqrt(metric(current, nearest))*1.1, false);
 
         double score_max = -DBL_MAX;
-        for (int j = 0; j < heap->length; j++) {
+        int j;
+        for (j = 0; j < heap->length; j++) {
             struct point* p = kdh_look(j, heap)->point;
 
             vec2 = get_direction(current, p);

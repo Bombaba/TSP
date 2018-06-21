@@ -5,20 +5,22 @@
 #include "point.h"
 #include "two_opt.h"
 
-bool two_opt(struct point pts[], int n_pts, double radius,
+bool two_opt(struct point pts[], int n_pts, double factor, double add,
              const struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
-    for (int i = 0; i < n_pts-2; i++) {
+    int i;
+    for (i = 0; i < n_pts-2; i++) {
         struct point* pa = pts + i;
         struct point* pb = pa->next;
         double dist_ab = sqrt(metric(pa, pb));
-        search_nearby_points(pa, tree, heap, dist_ab+radius, false);
+        search_nearby_points(pa, tree, heap, dist_ab*factor+add, false);
 
         double max_delta = 0;
         struct point* pc = NULL;
         struct point* pd = NULL;
-        for (int j = 0; j < heap->length; j++) {
+        int j;
+        for (j = 0; j < heap->length; j++) {
             struct point* p1 = kdh_look(j, heap)->point;
             struct point* p2 = p1->next;
 
