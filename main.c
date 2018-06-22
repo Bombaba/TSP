@@ -148,151 +148,165 @@ int main(int argc, char *argv[])
     struct kdtree* tree = build_kdtree(pts, n_pts);
     struct kdheap* heap = create_kdheap(tree);
 
-    const double FACTOR = 1.5;
-    const double ADD_FACTOR = 0;
     int opt_max = n_pts < 100 ? n_pts/10 : 10;
     int start;
 
-    printf("\n############# Reduce Map ############\n");
-    int reduce_num;
-    struct kdtree* tree2;
-    int copy_tour[MAX_N];
-    struct point reduced_pts[MAX_N];
-    struct point reduce_memo[MAX_N];
+    double afactor = 0.0;
+    double mfactor = 1.5;
 
-    reduce_num = reduce_map(pts, n_pts, reduced_pts, reduce_memo, 5.0);
-    tree2 = build_kdtree(reduced_pts, n_pts-reduce_num);
+    for (afactor = 0.0; afactor < 11.0; afactor += 5.0) {
+    for (mfactor = 1.5; mfactor > 1.0; mfactor -= 0.1) {
+        printf("\nADD FACTOR = %0.1lf, MUL FACTOR = %0.1lf\n", afactor, mfactor);
 
-    for (start = 0; start < n_pts-reduce_num; start++) {
-        putchar('-');
-        fflush(stdout);
+        /*
+        printf("\n############# Reduce Map ############\n");
+        int reduce_num;
+        struct kdtree* tree2;
+        int copy_tour[MAX_N];
+        struct point reduced_pts[MAX_N];
+        struct point reduce_memo[MAX_N];
 
-        build_tour_nn(reduced_pts, n_pts-reduce_num, start, copy_tour, tree2);
-        restore_reduced_tour(reduced_pts, reduce_memo, reduce_num, copy_tour, tour, n_pts);
+        reduce_num = reduce_map(pts, n_pts, reduced_pts, reduce_memo, -1);
+        tree2 = build_kdtree(reduced_pts, n_pts-reduce_num);
 
-        bool success;
-        int count = 0;
-        do {
-            success = false;
-            success |= calc_two_opt(FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
-            int i;
-            for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
+        for (start = 0; start < n_pts-reduce_num; start++) {
+            build_tour_nn(reduced_pts, n_pts-reduce_num, start, copy_tour, tree2);
+            for (int i; i < n_pts-reduce_num; i++) printf("%d ", copy_tour[i]);
+            printf("\n");
+            restore_reduced_tour(reduced_pts, reduce_memo, reduce_num, copy_tour, tour, n_pts);
+            for (int i; i < n_pts; i++) printf("%d ", copy_tour[i]);
+            printf("\n");
+
+            putchar('-');
+            fflush(stdout);
+
+            bool success;
+            int count = 0;
+            do {
+                success = false;
+                success |= calc_two_opt(1, 0, pts, n_pts, tour, tree, heap);
+                int i;
+                for (i = 1; i <= opt_max; i++) {
+                    success |= calc_or_opt(i, mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                }
+                count++;
+            } while (success);
+
+
+            double length = tour_length(pts, n_pts, tour);
+            if (length < min_length) {
+                min_length = length;
+                //memcpy(best_tour, tour, sizeof(int) * n_pts);
+                sprintf(tourFileName, "tour%08d.dat", ++num);
+                write_tour_data(tourFileName, n_pts, tour);
+                printf("\n%s: %lf\n", tourFileName, min_length);
+
             }
-            count++;
-        } while (success);
-
-
-        double length = tour_length(pts, n_pts, tour);
-        if (length < min_length) {
-            min_length = length;
-            //memcpy(best_tour, tour, sizeof(int) * n_pts);
-            sprintf(tourFileName, "tour%08d.dat", ++num);
-            write_tour_data(tourFileName, n_pts, tour);
-            printf("\n%s: %lf\n", tourFileName, min_length);
-
         }
-    }
+        */
 
+        printf("\n############# Shape Map ############\n");
+        struct point shaped_pts[MAX_N];
+        shape_map(pts, n_pts, shaped_pts, -1, 0.6);
 
+        struct kdtree* tree_shaped = build_kdtree(shaped_pts, n_pts);
 
-    printf("\n############# Shape Map ############\n");
-    struct point shaped_pts[MAX_N];
-    shape_map(pts, n_pts, shaped_pts, 100.0, 0.6);
+        for (start = 0; start < n_pts; start++) {
+            putchar('-');
+            fflush(stdout);
 
-    struct kdtree* tree_shaped = build_kdtree(shaped_pts, n_pts);
+            build_tour_nn(shaped_pts, n_pts, start, tour, tree_shaped);
 
-    for (start = 0; start < n_pts; start++) {
-        putchar('-');
-        fflush(stdout);
+            bool success;
+            int count = 0;
+            do {
+                success = false;
+                success |= calc_two_opt(mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                int i;
+                for (i = 1; i <= opt_max; i++) {
+                    success |= calc_or_opt(i, mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                }
+                count++;
+            } while (success);
 
-        build_tour_nn(shaped_pts, n_pts, start, tour, tree_shaped);
+            double length = tour_length(pts, n_pts, tour);
+            if (length < min_length) {
+                min_length = length;
+                //memcpy(best_tour, tour, sizeof(int) * n_pts);
+                sprintf(tourFileName, "tour%08d.dat", ++num);
+                write_tour_data(tourFileName, n_pts, tour);
+                printf("\n%s: %lf\n", tourFileName, min_length);
 
-        bool success;
-        int count = 0;
-        do {
-            success = false;
-            success |= calc_two_opt(FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
-            int i;
-            for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
             }
-            count++;
-        } while (success);
-
-        double length = tour_length(pts, n_pts, tour);
-        if (length < min_length) {
-            min_length = length;
-            //memcpy(best_tour, tour, sizeof(int) * n_pts);
-            sprintf(tourFileName, "tour%08d.dat", ++num);
-            write_tour_data(tourFileName, n_pts, tour);
-            printf("\n%s: %lf\n", tourFileName, min_length);
-
         }
-    }
+
+        free_kdtree(tree_shaped);
 
 
-    printf("\n############ NN 2 ############\n");
+        printf("\n############ NN 2 ############\n");
 
-    for (start = 0; start < n_pts; start++) {
-        putchar('-');
-        fflush(stdout);
+        for (start = 0; start < n_pts; start++) {
+            putchar('-');
+            fflush(stdout);
 
-        build_tour_nn2(pts, n_pts, start, tour, tree, heap);
+            build_tour_nn2(1.1, pts, n_pts, start, tour, tree, heap);
 
-        bool success;
-        int count = 0;
-        do {
-            success = false;
-            success |= calc_two_opt(FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
-            int i;
-            for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
+            bool success;
+            int count = 0;
+            do {
+                success = false;
+                success |= calc_two_opt(mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                int i;
+                for (i = 1; i <= opt_max; i++) {
+                    success |= calc_or_opt(i, mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                }
+                count++;
+            } while (success);
+
+            double length = tour_length(pts, n_pts, tour);
+            if (length < min_length) {
+                min_length = length;
+                //memcpy(best_tour, tour, sizeof(int) * n_pts);
+                sprintf(tourFileName, "tour%08d.dat", ++num);
+                write_tour_data(tourFileName, n_pts, tour);
+                printf("\n%s: %lf\n", tourFileName, min_length);
+
             }
-            count++;
-        } while (success);
-
-        double length = tour_length(pts, n_pts, tour);
-        if (length < min_length) {
-            min_length = length;
-            //memcpy(best_tour, tour, sizeof(int) * n_pts);
-            sprintf(tourFileName, "tour%08d.dat", ++num);
-            write_tour_data(tourFileName, n_pts, tour);
-            printf("\n%s: %lf\n", tourFileName, min_length);
-
         }
-    }
 
-    printf("\n############ NN 1 ###########\n");
+        /*
+        printf("\n############ NN 1 ###########\n");
 
-    for (start = 0; start < n_pts; start++) {
-        putchar('-');
-        fflush(stdout);
+        for (start = 0; start < n_pts; start++) {
+            putchar('-');
+            fflush(stdout);
 
-        build_tour_nn(pts, n_pts, start, tour, tree);
+            build_tour_nn(pts, n_pts, start, tour, tree);
 
-        bool success;
-        int count = 0;
-        do {
-            success = false;
-            success |= calc_two_opt(FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
-            int i;
-            for (i = 1; i <= opt_max; i++) {
-                success |= calc_or_opt(i, FACTOR, ADD_FACTOR*count, pts, n_pts, tour, tree, heap);
+            bool success;
+            int count = 0;
+            do {
+                success = false;
+                success |= calc_two_opt(mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                int i;
+                for (i = 1; i <= opt_max; i++) {
+                    success |= calc_or_opt(i, mfactor, afactor*count, pts, n_pts, tour, tree, heap);
+                }
+                count++;
+            } while (success);
+
+            double length = tour_length(pts, n_pts, tour);
+            if (length < min_length) {
+                min_length = length;
+                //memcpy(best_tour, tour, sizeof(int) * n_pts);
+                sprintf(tourFileName, "tour%08d.dat", ++num);
+                write_tour_data(tourFileName, n_pts, tour);
+                printf("\n%s: %lf\n", tourFileName, min_length);
+
             }
-            count++;
-        } while (success);
-
-        double length = tour_length(pts, n_pts, tour);
-        if (length < min_length) {
-            min_length = length;
-            //memcpy(best_tour, tour, sizeof(int) * n_pts);
-            sprintf(tourFileName, "tour%08d.dat", ++num);
-            write_tour_data(tourFileName, n_pts, tour);
-            printf("\n%s: %lf\n", tourFileName, min_length);
-
         }
-    }
+        */
+    }}
 
     free_kdtree(tree);
     free_kdheap(heap);

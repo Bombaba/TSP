@@ -55,7 +55,8 @@ static inline struct vector2 get_direction(struct point* from, struct point* to)
 }
 
 
-void build_tour_nn2(struct point pts[], int n_pts, int ixstart, int tour[],
+void build_tour_nn2(double factor,
+                    struct point pts[], int n_pts, int ixstart, int tour[],
                     const struct kdtree* tree, struct kdheap* heap)
 {
     struct kdtree* tree_copy;
@@ -84,7 +85,7 @@ void build_tour_nn2(struct point pts[], int n_pts, int ixstart, int tour[],
 
         search_nearby_points(
             current, tree_copy, heap,
-            sqrt(metric(current, nearest))*1.1, false);
+            sqrt(metric(current, nearest))*factor, false);
 
         double score_max = -DBL_MAX;
         int j;
