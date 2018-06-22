@@ -1,6 +1,44 @@
 #include <math.h>
 
 #include "shape.h"
+#include "kdtree.h"
+#include "evaluate.h"
+
+double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, double rate)
+{
+	int i, sum;
+	int distribution[1000];
+	struct point *current, *nearest;
+	struct kdtree* tree_copy;
+	double tmp = (n_pts / 1000) * 0.1 + rate;
+    if (tree == NULL) {
+        tree_copy = build_kdtree(pts, n_pts);
+    } else {
+        tree_copy = copy_kdtree(tree);
+    }
+
+	for(i=0;i<1000;i++) distribution[i] = 0;
+
+	for(i=0;i<n_pts;i++) {
+		double dist;
+		current = &pts[i];
+		nearest = search_nearest(&pts[i], tree_copy);
+		dist = sqrt((current->x-nearest->x)*(current->x-nearest->x)+(current->y-nearest->y)*(current->y-nearest->y));
+		distribution[(int)dist]++;
+	}
+
+	sum = distribution[0];
+	for(i=1;i<1000;i++) {
+		sum += distribution[i];
+		printf("%d ", distribution[i]);
+		if((double)sum / n_pts > tmp || sum >= 500) {
+			double thre = (tmp - (sum - distribution[i])) / distribution[i] + i;
+			printf("\nthre : %lf\n", thre);
+			return thre;
+		}
+	}
+	return 1000.0;
+}
 
 int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct point reduced_pts[], double thre)
 {
@@ -8,7 +46,17 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 	struct point list[n_pts*2];
 	struct point start, goal;
 	struct point *current, *current2;
+	struct kdtree *tree = NULL;
 	start.index = -1; goal.index = -2;
+
+	if(thre == 0.0) {
+		for(i=0;i<n_pts;i++)
+			copy_point(&pts[i], &copy_pts[i]);
+		return 0;
+	}
+
+	if(thre < 0)
+		thre = optimize_thre(pts, n_pts, tree, 0.2);
 
 	copy_point(&pts[0], &list[0]);
 	list[0].prev = &start; start.next = &list[0];
@@ -79,8 +127,15 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 	int i, index = 0;
 	struct point list[n_pts*2];
 	struct point start, goal;
+	struct point *current;
 	start.index = -1;
 	goal.index = -2;
+
+	if(n_rpts == 0) {
+		for(i=0;i<n_pts;i++)
+			copy_tour[i] = tour[i];
+		return;
+	}
 
 
 	// リストの作成
@@ -100,7 +155,7 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 	goal.prev = &list[index-1];
 
 	index = 0;
-	struct point *current = start.next;
+	current = start.next;
 
 	// リストにreduced_ptsの内容を追加
 	index = n_pts-n_rpts;
@@ -115,12 +170,22 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 			if(current->index == list[index-2].index) break;
 			current = current->next;
 		} while(current != &goal);
-		list[index-2].prev = current->prev;
-		list[index-2].next = &list[index-1];
-		list[index-1].prev = &list[index-2];
-		list[index-1].next = current->next;
-		current->prev->next = &list[index-2];
-		current->next->prev = &list[index-1];
+		if((current->x-list[index-2].x)*(current->x-list[index-2].x)+(current->y-list[index-2].y)*(current->y-list[index-2].y) < 
+				(current->x-list[index-1].x)*(current->x-list[index-1].x)+(current->y-list[index-1].y)*(current->y-list[index-1].y)) {
+			list[index-2].prev = current->prev;
+			list[index-2].next = &list[index-1];
+			list[index-1].prev = &list[index-2];
+			list[index-1].next = current->next;
+			current->prev->next = &list[index-2];
+			current->next->prev = &list[index-1];
+		} else {
+			list[index-1].prev = current->prev;
+			list[index-1].next = &list[index-2];
+			list[index-2].prev = &list[index-1];
+			list[index-2].next = current->next;
+			current->prev->next = &list[index-1];
+			current->next->prev = &list[index-1];
+		}
 	}
 
 	current = start.next;
@@ -140,9 +205,20 @@ void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double gr
 {
 	int i, j, n, s_x, s_y, s_m;
 	int mass[n_pts];
+	struct kdtree *tree = NULL;
 
 	for(i=0;i<n_pts;i++)
 		copy_point(&pts[i], &copy_pts[i]);
+
+	if(grv_thre == 0.0 || alpha == 0.0)
+		return;
+
+	if(grv_thre < 0) {
+		//grv_thre = optimize_thre(pts, n_pts, tree, 0.6);
+		double mean, hoge;
+		calc_distribution_param(pts, n_pts, tree, &mean, &hoge, &hoge, &hoge);
+		grv_thre = (int)mean + 1;
+	}
 
 	for(i=0;i<n_pts;i++) {
 		mass[i] = 0;
@@ -173,8 +249,10 @@ void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double gr
 		}
 		//printf("n=%d\n", n);
 
-		copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x);
-		copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y);
+		//copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x);
+		//copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y);
+		copy_pts[i].x += alpha * (s_x / (double)s_m - pts[i].x) / sqrt(n);
+		copy_pts[i].y += alpha * (s_y / (double)s_m - pts[i].y) / sqrt(n);
 		copy_pts[i].pos[0] = copy_pts[i].x;
 		copy_pts[i].pos[1] = copy_pts[i].y;
 	}
