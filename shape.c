@@ -10,7 +10,7 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 	int distribution[1000];
 	struct point *current, *nearest;
 	struct kdtree* tree_copy;
-	double tmp = (n_pts / 1000) * 0.1 + rate;
+	double tmp = (n_pts / 1000) * 0.05 + rate;
     if (tree == NULL) {
         tree_copy = build_kdtree(pts, n_pts);
     } else {
@@ -56,7 +56,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 	}
 
 	if(thre < 0)
-		thre = optimize_thre(pts, n_pts, tree, 0.2);
+		thre = optimize_thre(pts, n_pts, tree, 0.1);
 
 	copy_point(&pts[0], &list[0]);
 	list[0].prev = &start; start.next = &list[0];

@@ -69,8 +69,8 @@ void draw(struct point p[MAX_N],int n,int tour[MAX_N], struct point range) {
   gdImagePtr im;
   FILE *fp;
   int white,black,red,yellow;
-  char number[5];
-  char number2[7];
+  char number[20];
+  char number2[20];
 
   double rangemax = range.x > range.y ? range.x : range.y;
   im = gdImageCreate (WIDTH, HEIGHT);  /* 1000x1000 のイメージを作成する */
