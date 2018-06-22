@@ -3,7 +3,8 @@
 #include "point.h"
 #include "kdtree.h"
 
-bool or_opt(int n, struct point pts[], int n_pts, double factor, double add,
+bool or_opt(int n, struct point pts[], int n_pts,
+            double mul_factor, double add_factor,
             struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
@@ -20,7 +21,7 @@ bool or_opt(int n, struct point pts[], int n_pts, double factor, double add,
         double dist_ac = sqrt(metric(pa2, pc));
 
         double longer = dist_ba > dist_ac ? dist_ba : dist_ac;
-        search_nearby_points(pa1, tree, heap, longer*factor+add, false);
+        search_nearby_points(pa1, tree, heap, longer*mul_factor+add_factor, false);
 
         double max_delta = 0;
         struct point* px = NULL;

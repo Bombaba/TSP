@@ -5,7 +5,8 @@
 #include "point.h"
 #include "two_opt.h"
 
-bool two_opt(struct point pts[], int n_pts, double factor, double add,
+bool two_opt(struct point pts[], int n_pts,
+             double mul_factor, double add_factor,
              const struct kdtree* tree, struct kdheap* heap)
 {
     bool success = false;
@@ -14,7 +15,7 @@ bool two_opt(struct point pts[], int n_pts, double factor, double add,
         struct point* pa = pts + i;
         struct point* pb = pa->next;
         double dist_ab = sqrt(metric(pa, pb));
-        search_nearby_points(pa, tree, heap, dist_ab*factor+add, false);
+        search_nearby_points(pa, tree, heap, dist_ab*mul_factor+add_factor, false);
 
         double max_delta = 0;
         struct point* pc = NULL;
