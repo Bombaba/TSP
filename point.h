@@ -7,7 +7,7 @@
 
 struct point {
     int index;
-	int original_index;
+    int original_index;
     int x;
     int y;
     int pos[2];
@@ -51,3 +51,16 @@ static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[
     pts[tour[n_pts-1]].next = &pts[tour[0]];
     pts[tour[0]].prev = &pts[tour[n_pts-1]];
 }
+
+static inline void shuffle(int *array, int n)
+{
+    if (n > 1) {
+        for (int i = 0; i < n-1; i++) {
+            int j = i + rand() / (RAND_MAX / (n - 1) + 1);
+            int temp = array[j];
+            array[j] = array[i];
+            array[i] = temp;
+        }
+    }
+}
+

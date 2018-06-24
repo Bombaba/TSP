@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <assert.h>
 #include <float.h>
+
 #include "kdtree.h"
 #include "point.h"
 
-
-struct kdnode* find_min(struct kdnode* node, int dim);
 
 void ptree(const struct kdnode* node, int depth)
 {
     if (node == NULL) return;
 
-    for (int i = 0; i < depth; i++) {
+    int i;
+    for (i = 0; i < depth; i++) {
         printf("| ");
     }
 
@@ -48,8 +48,10 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
 {
     struct kdnode* shead = src->head;
     struct kdnode* dhead = (struct kdnode*) malloc(sizeof(struct kdnode) * src->size);
+    assert(dhead);
 
-    for (int i = 0; i < src->size; i++) {
+    int i;
+    for (i = 0; i < src->size; i++) {
         dhead[i].point = shead[i].point;
         dhead[i].left = shead[i].left ? (dhead + (shead[i].left - shead)) : NULL;
         dhead[i].right = shead[i].right ? (dhead + (shead[i].right - shead)) : NULL;
@@ -59,6 +61,8 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
     }
 
     struct kdtree* dst = (struct kdtree*) malloc(sizeof(struct kdtree));
+    assert(dst);
+
     dst->head = dhead;
     dst->root = dst->head + src->root->point->index;
     dst->size = src->size;
@@ -98,7 +102,11 @@ struct kdnode* build_subtree(struct kdnode nodes[], struct point* p_pts[], int n
     } else {
         qsort(p_pts, n_pts, sizeof(struct point*), key_compare_y);
     }
+
     int mid = n_pts / 2;
+    //for (int i = mid+1; i < n_pts; i++) {
+    //    if (p_pts[i-1]->pos[dim] == p_pts[i]->pos[dim]) mid++;
+    //}
     struct kdnode* nd = &nodes[p_pts[mid]->index];
 
     nd->dim = dim;
@@ -117,11 +125,14 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     if (n_pts == 0) return NULL;
 
     struct point** p_pts = (struct point**) malloc(sizeof(struct point*) * n_pts);
-    struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_pts + 1);
+    assert(p_pts);
+    struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_pts);
+    assert(head);
     
     if (p_pts == NULL || head == NULL) return NULL;
 
-    for (int i = 0; i < n_pts; i++) {
+    int i;
+    for (i = 0; i < n_pts; i++) {
         p_pts[i] = pts + i;
         head[i].point = pts + i;
         head[i].left = NULL;
@@ -134,6 +145,7 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     free(p_pts);
 
     struct kdtree* tree = (struct kdtree*) malloc(sizeof(struct kdtree));
+    assert(tree);
     tree->head = head;
     tree->root = root;
     tree->size = n_pts;
@@ -241,8 +253,8 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
             "         but point#%d was already removed.\n",
             pindex, pindex
         );
-        return false;
     }
+    assert(node->valid);
 
     remove_node(node, tree);
     return true;
@@ -404,7 +416,8 @@ struct point* kdh_pop(struct kdheap* heap)
     return top.point;
 }
 
-struct kdnear* kdh_look(int ix, struct kdheap* heap) {
+struct kdnear* kdh_look(int ix, struct kdheap* heap)
+{
     if (ix > heap->length) return NULL;
     return heap->content + ix;
 }
@@ -459,7 +472,7 @@ void nearby_points(const struct point* p, struct kdnode* node,
 }
 
 int search_nearby_points(const struct point* p, const struct kdtree* tree,
-                         struct kdheap* heap, double maxsqrdist, int maxsize)
+                         struct kdheap* heap, double maxdist, int maxsize)
 {
     if (tree->root == NULL || heap == NULL) return -1;
 
@@ -471,9 +484,9 @@ int search_nearby_points(const struct point* p, const struct kdtree* tree,
         heap->maxsize = tree->size;
     }
 
-    if (maxsqrdist < 0) maxsqrdist = DBL_MAX;
+    if (maxdist < 0) maxdist = DBL_MAX;
 
-    nearby_points(p, tree->root, heap, maxsqrdist);
+    nearby_points(p, tree->root, heap, maxdist * maxdist);
 
     return heap->length;
 } 

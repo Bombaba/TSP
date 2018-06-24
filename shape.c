@@ -10,7 +10,8 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 	int distribution[1000];
 	struct point *current, *nearest;
 	struct kdtree* tree_copy;
-	double tmp = (n_pts / 1000) * 0.05 + rate;
+	//double tmp = (n_pts / 1000) * 0.05 + rate;
+	double tmp = rate;
     if (tree == NULL) {
         tree_copy = build_kdtree(pts, n_pts);
     } else {
@@ -31,7 +32,11 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 	for(i=1;i<1000;i++) {
 		sum += distribution[i];
 		printf("%d ", distribution[i]);
-		if((double)sum / n_pts > tmp || sum >= 500) {
+		if(sum >= 100) {
+			double thre = ((100 / n_pts) - (sum - distribution[i])) / distribution[i] + i;
+			printf("\nthre : %lf\n", thre);
+			return thre;
+		} else if((double)sum / n_pts > tmp) {
 			double thre = (tmp - (sum - distribution[i])) / distribution[i] + i;
 			printf("\nthre : %lf\n", thre);
 			return thre;
@@ -67,8 +72,6 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 	}
 	list[n_pts-1].next = &goal; goal.prev = &list[n_pts-1];
 
-	printf("made up list\n");
-
 	num = 0;
 	current = start.next;
 	do {
@@ -76,6 +79,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 		do {
 			struct point a = *current, b = *current2;
 			if(sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)) < thre) {
+				printf("%d %d\t", a.index, b.index);
 				// reduced_ptrsに記録
 				copy_point(current, &reduced_pts[num*2]);
 				copy_point(current2, &reduced_pts[num*2+1]);
@@ -103,6 +107,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 		} while(current2 != &goal);
 		current = current->next;
 	} while(current->next != &goal);
+	printf("\n");
 
 	current = start.next;
 	index = 0;
@@ -119,6 +124,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 		current = current->next;
 	} while(current != &goal);
 
+	printf("%d cities has reduced!\n", num);
 	return num;
 }
 
@@ -184,7 +190,7 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 			list[index-2].prev = &list[index-1];
 			list[index-2].next = current->next;
 			current->prev->next = &list[index-1];
-			current->next->prev = &list[index-1];
+			current->next->prev = &list[index-2];
 		}
 	}
 
@@ -194,7 +200,9 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 	do {
 		copy_tour[i++] = current->index;
 		current = current->next;
+		//printf("%d ", copy_tour[i-1]);
 	} while(current != &goal);
+	//printf("\n");
 }
 
 // 都市の場所情報を整形する
