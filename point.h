@@ -52,6 +52,44 @@ static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[
     pts[tour[0]].prev = &pts[tour[n_pts-1]];
 }
 
+static inline int check_list_from_tour(struct point pts[], int n_pts, int tour[])
+{
+	int i;
+	int flag[n_pts];
+	struct point *current;
+	for(i=0;i<n_pts;i++) flag[i] = 0;
+
+	for(i=0;i<n_pts;i++) {
+		if(tour[i] < 0 || tour[i] >= n_pts) {
+			printf("%d\n", i);
+			return 0;
+		}
+		flag[tour[i]] += 1;
+	}
+
+	for(i=n_pts-1;i>=0;i--)
+		if(flag[i] != 1) {
+			printf("tour %d\n", i);
+			return 0;
+		}
+
+	for(i=0;i<n_pts;i++) flag[i] = 0;
+	current = &pts[tour[0]];
+	for(i=0;i<n_pts;i++) {
+		flag[current->index] += 1;
+		current = current->next;
+	}
+
+	for(i=0;i<n_pts;i++)
+		if(flag[i] != 1) {
+			printf("list %d\n", i);
+			return 0;
+		}
+
+	if(current == &pts[tour[0]]) return 1;
+	return 0;
+}
+
 static inline void shuffle(int *array, int n)
 {
     if (n > 1) {
