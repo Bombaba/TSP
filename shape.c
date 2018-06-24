@@ -76,10 +76,12 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 	current = start.next;
 	do {
 		current2 = current->next;
+		//printf("c");
 		do {
+			//printf("a");
 			struct point a = *current, b = *current2;
+				//printf("%d %d\t", a.index, b.index);
 			if(sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)) < thre) {
-				printf("%d %d\t", a.index, b.index);
 				// reduced_ptrsに記録
 				copy_point(current, &reduced_pts[num*2]);
 				copy_point(current2, &reduced_pts[num*2+1]);
@@ -97,6 +99,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 
 				current2->prev->next = current2->next;
 				current2->next->prev = current2->prev;
+				//printf("%d %d", current2->prev->index, current2->prev->next->index);
 
 
 				current = n;
@@ -104,10 +107,13 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 			} else {
 				current2 = current2->next;
 			}
+			//printf("\t%d\n", current2->index);
 		} while(current2 != &goal);
 		current = current->next;
-	} while(current->next != &goal);
-	printf("\n");
+		//printf("b %d ", current->index);
+		fflush(stdout);
+	} while(current != &goal && current->next != &goal);
+	//printf("\n");
 
 	current = start.next;
 	index = 0;
