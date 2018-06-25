@@ -45,7 +45,8 @@ static inline double metric(const struct point* p, const struct point* q)
 
 static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[])
 {
-    for (int i = 0; i < n_pts-1; i++) {
+    int i;
+    for (i = 0; i < n_pts-1; i++) {
         pts[tour[i]].next = &pts[tour[i+1]];
         pts[tour[i+1]].prev = &pts[tour[i]];
     }
@@ -94,7 +95,8 @@ static inline int check_list_from_tour(struct point pts[], int n_pts, int tour[]
 static inline void shuffle(int *array, int n)
 {
     if (n > 1) {
-        for (int i = 0; i < n-1; i++) {
+        int i;
+        for (i = 0; i < n-1; i++) {
             int j = i + rand() / (RAND_MAX / (n - 1) + 1);
             int temp = array[j];
             array[j] = array[i];
