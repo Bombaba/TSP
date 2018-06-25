@@ -31,6 +31,7 @@ struct kdheap {
 struct kdtree* build_kdtree(struct point pts[], int n_pts);
 void free_kdtree(struct kdtree* tree);
 bool remove_point_from_tree(int pindex, struct kdtree* tree);
+//void add_point_toward_tree(
 void print_kdtree(const struct kdtree* tree);
 struct point* search_nearest(const struct point* p, const struct kdtree* tree);
 struct kdtree* copy_kdtree(const struct kdtree* src);

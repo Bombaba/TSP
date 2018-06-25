@@ -1,6 +1,7 @@
 # TSP
 Traveling Salesman Problem
-This is ikeya's branch.
+
+This is miyagawa's branch.
 
 An executable named `a.out` is generated using following command.
 
