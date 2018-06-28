@@ -5,12 +5,13 @@
 
 void extract_cp(struct point pts[], int n_pts, 
 				struct point c_pts[], struct point p_pts[], int *c_num_ptr, 
-				double mean)
+				double mean, double std)
 {
 	int i, j, c_num, p_num;
 	int degree[n_pts];
 	double population[n_pts], *ptrs[n_pts], popu_memo[n_pts];
-	double thre = mean * 1.5;
+	double thre = mean * 2 + std * 0.5;
+	printf("threshold : %lf\n", thre);
 
 	for(i=0;i<n_pts;i++) { population[i] = 1.0; degree[i] = 0; }
 
