@@ -53,6 +53,18 @@ static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[
     pts[tour[0]].prev = &pts[tour[n_pts-1]];
 }
 
+static inline void build_tour_from_list(struct point* start, int n_pts, int tour[])
+{
+    struct point* p = start;
+    int i = 0;
+    do {
+        tour[i] = p->index;
+        i++;
+        p = p->next;
+    } while (p != start);
+    assert(i == n_pts);
+}
+
 static inline int check_list_from_tour(struct point pts[], int n_pts, int tour[])
 {
 	int i;

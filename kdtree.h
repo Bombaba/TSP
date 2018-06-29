@@ -15,6 +15,7 @@ struct kdtree {
     struct kdnode* head;
     struct kdnode* root;
     int size;
+    int n_valid;
 };
 
 struct kdnear {
