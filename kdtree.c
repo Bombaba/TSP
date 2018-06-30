@@ -60,6 +60,9 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
         dhead[i].valid = shead[i].valid;
     }
 
+    int* dmap = (int *) malloc(sizeof(int) * (src->pix_max+1));
+    memcpy(dmap, src->pix_to_nix_map, sizeof(int) * (src->pix_max+1));
+
     struct kdtree* dst = (struct kdtree*) malloc(sizeof(struct kdtree));
     assert(dst);
 
@@ -67,6 +70,8 @@ struct kdtree* copy_kdtree(const struct kdtree* src)
     dst->root = dst->head + src->root->point->index;
     dst->size = src->size;
     dst->n_valid = src->n_valid;
+    dst->pix_to_nix_map = dmap;
+    dst->pix_max = src->pix_max;
     return dst;
 }
 
@@ -87,12 +92,13 @@ int key_compare_y(const void* p1, const void* p2)
     return (i1 < i2) ? -1 : (i1 > i2) ? 1 : 0;
 }
 
-struct kdnode* build_subtree(struct kdnode nodes[], struct point* p_pts[], int n_pts, int dim)
+struct kdnode* build_subtree(struct kdnode nodes[], int pton_map[],
+                             struct point* p_pts[], int n_pts, int dim)
 {
     if (n_pts == 0) return NULL;
 
     if (n_pts == 1) {
-        struct kdnode* nd = &nodes[p_pts[0]->index];
+        struct kdnode* nd = &nodes[pton_map[p_pts[0]->index]];
         nd->dim = dim;
         nd->valid = true;
         return nd;
@@ -108,14 +114,14 @@ struct kdnode* build_subtree(struct kdnode nodes[], struct point* p_pts[], int n
     //for (int i = mid+1; i < n_pts; i++) {
     //    if (p_pts[i-1]->pos[dim] == p_pts[i]->pos[dim]) mid++;
     //}
-    struct kdnode* nd = &nodes[p_pts[mid]->index];
+    struct kdnode* nd = &nodes[pton_map[p_pts[mid]->index]];
 
     nd->dim = dim;
     nd->valid = true;
-    nd->left = build_subtree(nodes, p_pts, mid, 1-dim);
+    nd->left = build_subtree(nodes, pton_map, p_pts, mid, 1-dim);
     if (nd->left) nd->left->parent = nd;
 
-    nd->right = build_subtree(nodes, p_pts+mid+1, n_pts-mid-1, 1-dim);
+    nd->right = build_subtree(nodes, pton_map, p_pts+mid+1, n_pts-mid-1, 1-dim);
     if (nd->right) nd->right->parent = nd;
 
     return nd;
@@ -123,16 +129,29 @@ struct kdnode* build_subtree(struct kdnode nodes[], struct point* p_pts[], int n
 
 struct kdtree* build_kdtree(struct point pts[], int n_pts)
 {
+    int i;
+
     if (n_pts == 0) return NULL;
 
     struct point** p_pts = (struct point**) malloc(sizeof(struct point*) * n_pts);
     assert(p_pts);
     struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_pts);
     assert(head);
-    
-    if (p_pts == NULL || head == NULL) return NULL;
 
-    int i;
+    int pix_max = -1;
+    for (i = 0; i < n_pts; i++) {
+        if (pts[i].index > pix_max) {
+            pix_max = pts[i].index;
+        }
+    }
+    assert(pix_max > 0);
+
+    int* pix_to_nix_map = (int*) malloc(sizeof(int) * (pix_max+1));
+    assert(pix_to_nix_map);
+    for (i = 0; i < pix_max+1; i++) {
+        pix_to_nix_map[i] = -1; 
+    }
+
     for (i = 0; i < n_pts; i++) {
         p_pts[i] = pts + i;
         head[i].point = pts + i;
@@ -141,8 +160,10 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
         head[i].parent = NULL;
         head[i].dim = -1;
         head[i].valid = false;
+
+        pix_to_nix_map[pts[i].index] = i;
     }
-    struct kdnode* root = build_subtree(head, p_pts, n_pts, 0);
+    struct kdnode* root = build_subtree(head, pix_to_nix_map, p_pts, n_pts, 0);
     free(p_pts);
 
     struct kdtree* tree = (struct kdtree*) malloc(sizeof(struct kdtree));
@@ -151,9 +172,74 @@ struct kdtree* build_kdtree(struct point pts[], int n_pts)
     tree->root = root;
     tree->size = n_pts;
     tree->n_valid = n_pts;
+    tree->pix_to_nix_map = pix_to_nix_map;
+    tree->pix_max = pix_max;
 
     return tree;
 }
+
+struct kdtree* build_kdtree_from_indices(struct point pts[], int n_pts,
+                                         int pointixs[], int n_indices)
+{
+    int i, j;
+
+    assert(n_indices > 0);
+    assert(n_pts >= n_indices);
+
+    struct point** p_pts = (struct point**) malloc(sizeof(struct point*) * n_indices);
+    assert(p_pts);
+    struct kdnode* head = (struct kdnode*) malloc(sizeof(struct kdnode) * n_indices);
+    assert(head);
+
+    int pix_max = -1;
+    for (i = 0; i < n_indices; i++) {
+        if (pointixs[i] > pix_max) {
+            pix_max = pointixs[i];
+        }
+    }
+    assert(pix_max > 0);
+
+    int* pix_to_nix_map = (int*) malloc(sizeof(int) * (pix_max+1));
+    assert(pix_to_nix_map);
+    for (i = 0; i < pix_max+1; i++) {
+        pix_to_nix_map[i] = -1; 
+    }
+
+    for (i = 0; i < n_indices; i++) {
+        struct point* p;
+        for (j = 0; j < n_pts; j++) {
+            if (pts[j].index == pointixs[i]) {
+                p = pts + j;
+                break;
+            }
+        }
+        assert(j < n_pts);
+
+        p_pts[i] = p;
+        head[i].point = p;
+        head[i].left = NULL;
+        head[i].right = NULL;
+        head[i].parent = NULL;
+        head[i].dim = -1;
+        head[i].valid = false;
+
+        pix_to_nix_map[pointixs[i]] = i;
+    }
+    struct kdnode* root = build_subtree(head, pix_to_nix_map, p_pts, n_indices, 0);
+    free(p_pts);
+
+    struct kdtree* tree = (struct kdtree*) malloc(sizeof(struct kdtree));
+    assert(tree);
+    tree->head = head;
+    tree->root = root;
+    tree->size = n_indices;
+    tree->n_valid = n_indices;
+    tree->pix_to_nix_map = pix_to_nix_map;
+    tree->pix_max = pix_max;
+
+    return tree;
+}
+
 
 
 void free_kdtree(struct kdtree* tree)
@@ -161,6 +247,7 @@ void free_kdtree(struct kdtree* tree)
     if (tree->head == NULL) return;
 
     free(tree->head);
+    free(tree->pix_to_nix_map);
     free(tree);
 }
 
@@ -235,18 +322,29 @@ void remove_node(struct kdnode* node, struct kdtree* tree)
 //bool remove_point_from_tree(struct point* p, struct kdtree* tree)
 bool remove_point_from_tree(int pindex, struct kdtree* tree)
 {
-    //int pindex = p->index;
-    if (pindex >= tree->size) {
+    if (pindex > tree->pix_max) {
         fprintf(
             stderr,
             "Error: Trying to remove point#%d from the kdtree,\n"
             "       but the maximum index of the tree is #%d\n",
-            pindex, tree->size-1
+            pindex, tree->pix_max
         );
         exit(EXIT_FAILURE);
     }
 
-    struct kdnode* node = tree->head + pindex;
+    int nodeix = tree->pix_to_nix_map[pindex];
+
+    if (nodeix < 0) {
+        fprintf(
+            stderr,
+            "Error: Trying to remove point#%d from the kdtree,\n"
+            "       but point#%d is not included in the tree.\n",
+            pindex, pindex
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    struct kdnode* node = tree->head + nodeix;
 
     if (node->valid == false) {
         fprintf(
@@ -255,8 +353,8 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
             "         but point#%d was already removed.\n",
             pindex, pindex
         );
+        exit(EXIT_FAILURE);
     }
-    assert(node->valid);
 
     remove_node(node, tree);
     tree->n_valid--;

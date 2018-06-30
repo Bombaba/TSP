@@ -16,6 +16,8 @@ struct kdtree {
     struct kdnode* root;
     int size;
     int n_valid;
+    int* pix_to_nix_map;
+    int pix_max;
 };
 
 struct kdnear {
@@ -30,6 +32,8 @@ struct kdheap {
 };
 
 struct kdtree* build_kdtree(struct point pts[], int n_pts);
+struct kdtree* build_kdtree_from_indices(struct point pts[], int n_pts,
+                                         int pointixs[], int n_indices);
 void free_kdtree(struct kdtree* tree);
 bool remove_point_from_tree(int pindex, struct kdtree* tree);
 //void add_point_toward_tree(
