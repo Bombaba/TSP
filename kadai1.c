@@ -497,8 +497,8 @@ bool remove_point_from_tree(int pindex, struct kdtree* tree)
             "         but point#%d was already removed.\n",
             pindex, pindex
         );
+        exit(EXIT_FAILURE);
     }
-    assert(node->valid);
 
     remove_node(node, tree);
     tree->n_valid--;
@@ -951,18 +951,7 @@ int main(int argc, char *argv[])
         printf("\n%s: %lf\n", tourFileName, min_length);
     }
 
-    struct kdtree* tree2 = build_kdtree_from_indices(pts, n_pts, prec, n_prec);
-    print_kdtree(tree2);
-    while(tree2->root) {
-        int ix;
-        printf("Point to remove: ");
-        scanf("%d", &ix);
-        remove_point_from_tree(ix, tree2);
-        print_kdtree(tree2);
-    }
-
     free_kdtree(tree);
-    free_kdtree(tree2);
     //free_kdheap(heap);
     printf("\n");
 
