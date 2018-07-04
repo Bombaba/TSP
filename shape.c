@@ -45,7 +45,8 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 	return 1000.0;
 }
 
-int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct point reduced_pts[], double thre)
+int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], 
+				struct point reduced_pts[], const int cp[], int cn, double thre)
 {
 	int i, num, index;
 	struct point list[n_pts*2];
@@ -80,12 +81,14 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 		do {
 			//printf("a");
 			struct point a = *current, b = *current2;
+			int success = 0;
+			
+			for(i=0;i<cn;i++) {
+				if(a.original_index == cp[i]) success += 1;
+				if(b.original_index == cp[i]) success += 2;
+			}
 				//printf("%d %d\t", a.index, b.index);
-			if(sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)) < thre) {
-				// reduced_ptrsに記録
-				copy_point(current, &reduced_pts[num*2]);
-				copy_point(current2, &reduced_pts[num*2+1]);
-
+			if(success < 3 && sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)) < thre) {
 				// nの操作
 				struct point *n = &list[n_pts + num++];
 				copy_point(current, n);
@@ -93,14 +96,26 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], struct po
 				n->y = (current->y+current2->y) / 2.0;
 				n->pos[0] = n->x;
 				n->pos[1] = n->y;
+				
+				if(success < 2) {
+					// reduced_ptrsに記録
+					copy_point(current, &reduced_pts[num*2]);
+					copy_point(current2, &reduced_pts[num*2+1]);
 
+				} else {
+					// reduced_ptrsに記録
+					copy_point(current2, &reduced_pts[num*2]);
+					copy_point(current, &reduced_pts[num*2+1]);
+
+					n->index = current2->index;
+					n->original_index = current2->original_index;
+				}
 				current->prev->next = n;
 				current->next->prev = n;
 
 				current2->prev->next = current2->next;
 				current2->next->prev = current2->prev;
 				//printf("%d %d", current2->prev->index, current2->prev->next->index);
-
 
 				current = n;
 				current2 = current2->next;
