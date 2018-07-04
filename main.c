@@ -51,7 +51,7 @@ int check_tour(int tour[], int n_pts) {
 	return 1;
 }
 
-void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
+void read_tsp_data(char *filename, struct point p[MAX_N],int *np, int prec[MAX_N], int *mp) {
 	FILE *fp;
 	char buff[100];
 	int i;
@@ -60,6 +60,16 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
 		fprintf(stderr,"Error: File %s open failed.\n",filename);
 		exit(0);
 	}   
+
+	while((fgets(buff,sizeof(buff),fp)!=NULL)   // PRECEDENCE_CONSTRAINTS:で始まる行に出会う
+			&&(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)!=0)) ; // まで読み飛ばす.
+	if(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)==0)  {
+		sscanf(buff+24,"%d",mp);
+		for(i=0;i<*mp;i++) fscanf(fp,"%d ",&prec[i]);
+	} else {
+		fprintf(stderr,"Error: There is no precedence constraint in file %s.\n",filename);
+		exit(EXIT_FAILURE);
+	}
 
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // DIMENSION で始まる行に出会う
 			&&(strncmp("DIMENSION",buff,9)!=0)) ; // まで読み飛ばす. 
@@ -72,6 +82,7 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
 		if(fgets(buff,sizeof(buff),fp)!=NULL) 
 			sscanf(buff,"%*d %d %d", &(p[i].x), &(p[i].y)); // i番目の点の座標を読み込む
 		p[i].index = i;
+		p[i].original_index = i;
 		p[i].pos[0] = p[i].x;
 		p[i].pos[1] = p[i].y;
 		p[i].next = NULL;
@@ -152,15 +163,16 @@ bool calc_or_opt(int len, double mul_factor, double add_factor,
 
 int main(int argc, char *argv[])
 {
-    int n_pts;
+    int n_pts, m;
     struct point pts[MAX_N];
+	int prec[MAX_N];
 
     if(argc != 2) {
             fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
             return EXIT_FAILURE;
     }
 
-    read_tsp_data(argv[1], pts, &n_pts);
+    read_tsp_data(argv[1], pts, &n_pts, prec, &m);
 
     int tour[MAX_N];
     //int best_tour[MAX_N];
@@ -221,7 +233,7 @@ int main(int argc, char *argv[])
         struct point reduced_pts[MAX_N];
         struct point reduce_memo[MAX_N];
 
-        reduce_num = reduce_map(pts, n_pts, reduced_pts, reduce_memo, -1);
+        reduce_num = reduce_map(pts, n_pts, reduced_pts, reduce_memo, prec, m, -1);
         tree2 = build_kdtree(reduced_pts, n_pts-reduce_num);
         printf("reduced: %d\n", reduce_num);
 

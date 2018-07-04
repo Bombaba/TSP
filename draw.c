@@ -33,9 +33,9 @@ double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
 	return sum;// 総距離が関数の戻り値
 }
 
-struct point read_tsp_data(char *filename, struct point p[MAX_N],int *np, int cp[], int *cnp) {
+struct point read_tsp_data(char *filename, struct point p[MAX_N],int *np, int prec[], int *mp) {
 	FILE *fp;
-	char buff[100], *tp;
+	char buff[1000], *tp;
 	int i;
 	struct point range = { .x = 0, .y = 0};
 
@@ -44,23 +44,18 @@ struct point read_tsp_data(char *filename, struct point p[MAX_N],int *np, int cp
 		exit(0);
 	}   
 
-	while((fgets(buff,sizeof(buff),fp)!=NULL)
-		&&(strncmp("DIMENSION",buff,9)!=0)
-		&&(strncmp("PRECEDENCE",buff,10)!=0));	
-	
-	if(strncmp("PRECEDENCE",buff,10) == 0) {
-		sscanf(buff,"PRECEDENCE: %d",cnp);
-		i = 0;
-		tp = strtok(buff, " ");
-		cp[i++] = atoi(tp);
-		while(tp != NULL) {
-			tp = strtok(NULL, " ");
-			cp[i++] = atoi(tp);
-		}
+	while((fgets(buff,sizeof(buff),fp)!=NULL)   // PRECEDENCE_CONSTRAINTS:で始まる行に出会う
+			&&(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)!=0)) ; // まで読み飛ばす.
+	if(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)==0)  {
+		sscanf(buff+24,"%d",mp);
+		for(i=0;i<*mp;i++) fscanf(fp,"%d ",&prec[i]);
+	} else {
+		fprintf(stderr,"Error: There is no precedence constraint in file %s.\n",filename);
+		exit(EXIT_FAILURE);
 	}
 
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // DIMENSION で始まる行に出会う
-		&&(strncmp("DIMENSION",buff,9)!=0)) ; // まで読み飛ばす. 
+			&&(strncmp("DIMENSION",buff,9)!=0)) ; // まで読み飛ばす. 
 	sscanf(buff,"DIMENSION : %d",np);           // 点の数 *np を読み込む
 
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // NODE_COORD_SECTIONで始まる
@@ -123,7 +118,7 @@ void draw(struct point p[MAX_N],int n,int tour[MAX_N], struct point range, int c
 		gdImageArc(im, x, y, 7, 7, 0, 360, red);
 	}
 
-	for(i=0;i<n;i++) {
+	for(i=0;i<cn;i++) {
 		int x1 = (p[cp[i]].x / rangemax) * (WIDTH-50);
 		int x2 = (p[cp[(i+1)%cn]].x / rangemax) * (WIDTH-50);
 		int y1 = (p[cp[i]].y / rangemax) * (HEIGHT-50);

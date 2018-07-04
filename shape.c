@@ -89,8 +89,9 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 			}
 				//printf("%d %d\t", a.index, b.index);
 			if(success < 3 && sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)) < thre) {
+				//printf("%d + %d\n", current->original_index, current2->original_index);
 				// nの操作
-				struct point *n = &list[n_pts + num++];
+				struct point *n = &list[n_pts + num];
 				copy_point(current, n);
 				n->x = (current->x+current2->x) / 2.0;
 				n->y = (current->y+current2->y) / 2.0;
@@ -104,6 +105,7 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 
 				} else {
 					// reduced_ptrsに記録
+					//printf("back connect\n");
 					copy_point(current2, &reduced_pts[num*2]);
 					copy_point(current, &reduced_pts[num*2+1]);
 
@@ -117,8 +119,10 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 				current2->next->prev = current2->prev;
 				//printf("%d %d", current2->prev->index, current2->prev->next->index);
 
+				//printf("%d + %d\nrest: %d, reduced: %d\n", current->original_index, current2->original_index, reduced_pts[num*2].index, reduced_pts[num*2+1].index);
 				current = n;
 				current2 = current2->next;
+				num++;
 			} else {
 				current2 = current2->next;
 			}
