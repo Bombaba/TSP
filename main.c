@@ -82,72 +82,72 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
 }
 
 void write_tour_data(char *filename, int n, int tour[MAX_N]){
-	FILE *fp; 
-	int i;
+    FILE *fp; 
+    int i;
 
-	// 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
-	if((fp=fopen(filename,"wt"))==NULL){ 
-		fprintf(stderr,"Error: File %s open failed.\n",filename);
-		exit(EXIT_FAILURE);
-	}
-	fprintf(fp,"%d\n",n);
-	for(i=0;i<n; i++){
-		fprintf(fp,"%d ",tour[i]);
-	}
-	fprintf(fp,"\n");
-	fclose(fp);
+    // 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
+    if((fp=fopen(filename,"wt"))==NULL){ 
+            fprintf(stderr,"Error: File %s open failed.\n",filename);
+            exit(EXIT_FAILURE);
+    }
+    fprintf(fp,"%d\n",n);
+    for(i=0;i<n; i++){
+            fprintf(fp,"%d ",tour[i]);
+    }
+    fprintf(fp,"\n");
+    fclose(fp);
 }
 
 void print_points(struct point pts[], int n_pts)
 {
-	int i;
-	for (i = 0; i < n_pts; i++)
-	{
-		printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
-	}
+    int i;
+    for (i = 0; i < n_pts; i++)
+    {
+        printf("%3d: %5d %5d\n", pts[i].index, pts[i].x, pts[i].y);
+    }
 }
 
 bool calc_two_opt(double mul_factor, double add_factor,
 		struct point pts[], int n_pts, int tour[],
 		struct kdtree* tree, struct kdheap* heap)
 {
-	bool success = false;
-	build_list_from_tour(pts, n_pts, tour);
-	if(!check_list_from_tour(pts, n_pts, tour)) {int i; for(i=0;i<n_pts;i++) printf("%d ", tour[i]); printf("\n");}
-	//if(!check_list_from_tour(pts, n_pts, tour)) {struct point* cur = &pts[tour[0]]; do{ printf("%d ", cur->index); cur = cur->next; } while(cur != &pts[tour[0]]); printf("\n"); }
-	while (two_opt(pts, n_pts, mul_factor, add_factor, tree, heap)) {
-		success = true;
-	}
-	if (success) {
-		struct point* list_tour = pts;
-		int i;
-		for (i = 0; i < n_pts; i++) {
-			tour[i] = list_tour->index;
-			list_tour = list_tour->next;
-		}
-	}
+    bool success = false;
+    build_list_from_tour(pts, n_pts, tour);
+    if(!check_list_from_tour(pts, n_pts, tour)) {int i; for(i=0;i<n_pts;i++) printf("%d ", tour[i]); printf("\n");}
+    //if(!check_list_from_tour(pts, n_pts, tour)) {struct point* cur = &pts[tour[0]]; do{ printf("%d ", cur->index); cur = cur->next; } while(cur != &pts[tour[0]]); printf("\n"); }
+    while (two_opt(pts, n_pts, mul_factor, add_factor, tree, heap)) {
+            success = true;
+    }
+    if (success) {
+            struct point* list_tour = pts;
+            int i;
+            for (i = 0; i < n_pts; i++) {
+                    tour[i] = list_tour->index;
+                    list_tour = list_tour->next;
+            }
+    }
 
-	return success;
+    return success;
 }
 
 bool calc_or_opt(int len, double mul_factor, double add_factor,
 		struct point pts[], int n_pts, int tour[],
 		struct kdtree* tree, struct kdheap* heap)
 {
-	bool success = false;
-	build_list_from_tour(pts, n_pts, tour);
-	while (or_opt(len, pts, n_pts, mul_factor, add_factor, tree, heap)) {
-		success = true;
-	}
-	if (success) {
-		struct point* list_tour = pts;
-		int i;
-		for (i = 0; i < n_pts; i++) {
-			tour[i] = list_tour->index;
-			list_tour = list_tour->next;
-		}
-	}
-	return success;
+    bool success = false;
+    build_list_from_tour(pts, n_pts, tour);
+    while (or_opt(len, pts, n_pts, mul_factor, add_factor, tree, heap)) {
+            success = true;
+    }
+    if (success) {
+            struct point* list_tour = pts;
+            int i;
+            for (i = 0; i < n_pts; i++) {
+                    tour[i] = list_tour->index;
+                    list_tour = list_tour->next;
+            }
+    }
+    return success;
 }
 
 int main(int argc, char *argv[])
