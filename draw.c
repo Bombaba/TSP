@@ -12,7 +12,7 @@
 #include <gd.h>
 #include <gdfonts.h>
 #include <math.h>
-#define MAX_N 10000   // 点の数の最大値
+#define MAX_N 100000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define WIDTH 1500
 #define HEIGHT 1500
@@ -35,7 +35,7 @@ double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
 
 struct point read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   FILE *fp;
-  char buff[1000];
+  char buff[1000000];
   int i;
   struct point range = { .x = 0, .y = 0};
 
