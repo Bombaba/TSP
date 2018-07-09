@@ -1,6 +1,6 @@
 /*
  * 13.Monney-Men
- * Implemented Nearest-Insertion.
+ * Implemented Nearest-Insertion and two-opt.
  */
 #include <stdio.h>
 #include <string.h>
