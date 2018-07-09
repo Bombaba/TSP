@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import re
 import sys
 import os
 import subprocess
+import pandas as pd
 from datetime import datetime
 from pathlib import Path
 import libverify
 
 LIM_SECOND= 20 * 60
+
+re_expr = re.compile(r'Valid dat file. (?P<dist>\d+\.\d+)')
 
 def main():
     parser = argparse.ArgumentParser()
@@ -21,52 +25,83 @@ def main():
     )
     args = parser.parse_args()
 
-    path_exec = Path(args.exec).resolve()
-    if not path_exec.exists() or path_exec.is_dir():
-        sys.stderr.write("ERROR: {0} does not exist.\n".format(path_exec))
+    exe_path = Path(args.exec).resolve()
+    if not exe_path.exists() or exe_path.is_dir():
+        sys.stderr.write("ERROR: {0} does not exist.\n".format(exe_path))
         sys.exit(1)
 
     current_dir = Path.cwd().resolve()
     if args.output_directory is None:
-        output_dir_parent = current_dir / Path(path_exec.stem)
+        output_dir_parent = current_dir / Path(exe_path.stem)
     else:
         output_dir_parent = Path(args.output_directory).resolve()
 
+    stats = []
+
     for tsp in args.tsps:
-        tspfile = Path(tsp).resolve()
-        if not tspfile.exists():
+        tsp_path = Path(tsp).resolve()
+        if not tsp_path.exists():
             continue
 
-        output_dir = output_dir_parent / Path(tspfile.stem)
+        output_dir = output_dir_parent / Path(tsp_path.stem)
         output_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(str(output_dir))
         print("Executing: {0} {1}".format(args.exec, tsp))
 
-        t1 = datetime.now()
-        process = subprocess.Popen([str(path_exec), str(tspfile)],
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        datfile = ""
-        while True:
-            t_delta = datetime.now() - t1
-            output = process.stdout.readline().decode('utf-8')
-            if output:
-                if output.startswith("tour"):
-                    e = output.find("dat") + 3
-                    datfile = output[:e]
-                print(output.strip())
-            elif process.poll() is not None:
-                print("[Finished] {0}".format(t_delta))
-                break
+        dats = execute(exe_path, tsp_path, LIM_SECOND);
+        if dats:
+            dat_path, t_delta = dats[-1]
+            dat_path = Path(dat_path).resolve()
+            process = libverify.check(tsp_path, dat_path)
 
-            if t_delta.seconds >= LIM_SECOND:
-                process.kill()
-                print("[Terminated]", end=" ")
-                break
-        datfile = Path(datfile).resolve()
-        libverify.check(tspfile, datfile)
+            if (process.returncode == 0):
+                match = re_expr.match(process.stdout.decode('utf-8'))
+                if match:
+                    dist = match.group('dist')
+                    print("{0} is valid. Distance: {1}, Time: {2}".format(
+                        dat_path.name, dist, t_delta)
+                    )
+                    stats.append((tsp_path.name, dist, t_delta))
+        else:
+            print("No tsp file generated over {0}".format(str(tsp_path.name)))
+            stats.append((tsp_path.name, None, None))
+
         os.chdir(str(current_dir))
 
+    stats_path = output_dir_parent / Path(exe_path.stem + ".csv")
+    save_stats(stats, stats_path)
+
+def execute(exe_path, tsp_path, timeout):
+    t1 = datetime.now()
+    process = subprocess.Popen([str(exe_path), str(tsp_path)],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    dats = []
+    while True:
+        t_delta = (datetime.now() - t1).total_seconds()
+        output = process.stdout.readline().decode('utf-8')
+        if output:
+            if output.startswith("tour"):
+                e = output.find("dat") + 3
+                datname = output[:e]
+                dats.append((datname, t_delta))
+            print(output.strip())
+        elif process.poll() is not None:
+            print("[Finished]", end=" ", flush=True)
+            break
+
+        if t_delta >= timeout:
+            process.kill()
+            print("[Terminated]", end=" ", flush=True)
+            break
+    return dats
+
+def save_stats(stats, stats_path):
+    df = pd.DataFrame([e[1:] for e in stats],
+                      columns=["Distance", "Time"],
+                      index=[e[0] for e in stats])
+    with stats_path.open('w') as f:
+        f.write(df.to_csv())
 
 if __name__ == '__main__':
     main()

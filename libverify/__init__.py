@@ -11,5 +11,6 @@ process = subprocess.run(["gcc", str(c_path), "-lm", "-o", str(out_path)], check
 print("check_validity build success")
 
 def check(tsp_path, dat_path):
-    process = subprocess.run([str(out_path), str(dat_path), str(tsp_path)])
-    return process.returncode == 0
+    process = subprocess.run([str(out_path), str(dat_path), str(tsp_path)],
+                             stdout=subprocess.PIPE)
+    return process
