@@ -32,7 +32,7 @@ def main():
 
     current_dir = Path.cwd().resolve()
     if args.output_directory is None:
-        output_dir_parent = current_dir / Path(exe_path.stem)
+        output_dir_parent = current_dir / (exe_path.stem + "_d")
     else:
         output_dir_parent = Path(args.output_directory).resolve()
 
@@ -43,7 +43,7 @@ def main():
         if not tsp_path.exists():
             continue
 
-        output_dir = output_dir_parent / Path(tsp_path.stem)
+        output_dir = output_dir_parent / tsp_path.stem
         output_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(str(output_dir))
         print("Executing: {0} {1}".format(args.exec, tsp))
@@ -68,7 +68,7 @@ def main():
 
         os.chdir(str(current_dir))
 
-    stats_path = output_dir_parent / Path(exe_path.stem + ".csv")
+    stats_path = output_dir_parent / (exe_path.stem + ".csv")
     save_stats(stats, stats_path)
 
 def execute(exe_path, tsp_path, timeout):
@@ -100,7 +100,8 @@ def save_stats(stats, stats_path):
     df = pd.DataFrame([e[1:] for e in stats],
                       columns=["Distance", "Time"],
                       index=[e[0] for e in stats])
-    with stats_path.open('w') as f:
+    df.index.name = str(datetime.now())
+    with stats_path.open('a') as f:
         f.write(df.to_csv())
 
 if __name__ == '__main__':
