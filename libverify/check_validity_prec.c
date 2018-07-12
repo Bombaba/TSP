@@ -188,9 +188,9 @@ int main(int argc, char *argv[]) {
   FILE *fp;
   double tl;
   int i,j;
-  char filename[60];
-  char dat_filename[60];
-  char tsp_filename[60];
+  char filename[100];
+  char dat_filename[100];
+  char tsp_filename[100];
   int n;
   int m;
   int filenamelength;
