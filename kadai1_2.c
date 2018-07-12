@@ -1,6 +1,6 @@
 /*
  * 13.Monney-Men
- * Implemented Nearest-Insertion.
+ * Implemented Farthest-Insertion and 2opt.
  */
 #include <stdio.h>
 #include <string.h>
@@ -168,7 +168,6 @@ int main(int argc, char *argv[])
     int tour[MAX_N];
     double min_length = DBL_MAX;
 
-
     build_tour_fi_prec(pts, n_pts, prec, n_prec, tour);
     //print_tour(pts, n_pts, tour);
     save_tour_if_shortest(pts, n_pts, tour, &min_length);
@@ -180,7 +179,6 @@ int main(int argc, char *argv[])
         save_tour_if_shortest(pts, n_pts, tour, &min_length);
 
     } while(success);
-
 
     return EXIT_SUCCESS;
 }

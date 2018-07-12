@@ -11,9 +11,8 @@ void build_tour_fi_prec(struct point pts[], int n_pts,
 
     // Number of points in tour
     int n_in_tour = 0;
-
     // Index array of the points in tour
-    bool* in_tour = (bool*) malloc(sizeof(bool) * n_pts);
+    bool in_tour[n_pts];
     // There is no point in tour yet.
     for (i = 0; i < n_pts; i++) in_tour[i] = false;
 
@@ -81,6 +80,5 @@ void build_tour_fi_prec(struct point pts[], int n_pts,
         n_in_tour++;
     }
 
-    free(in_tour);
     build_tour_from_list(&pts[prec[0]], n_pts, tour);
 }
