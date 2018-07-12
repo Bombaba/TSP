@@ -11,8 +11,7 @@
 #include <assert.h>
 
 #include "point.h"
-#include "kdtree.h"
-#include "ni_prec.h"
+#include "fi_prec.h"
 #include "two_opt_prec.h"
 
 #define MAX_N 10000   // 点の数の最大値
@@ -169,11 +168,8 @@ int main(int argc, char *argv[])
     int tour[MAX_N];
     double min_length = DBL_MAX;
 
-    struct kdtree* tree = build_kdtree(pts, n_pts);
-    //print_kdtree(tree);
-    //struct kdheap* heap = create_kdheap(tree);
 
-    build_tour_ni_prec(pts, n_pts, prec, n_prec, tour, tree);
+    build_tour_fi_prec(pts, n_pts, prec, n_prec, tour);
     //print_tour(pts, n_pts, tour);
     save_tour_if_shortest(pts, n_pts, tour, &min_length);
 
@@ -185,9 +181,6 @@ int main(int argc, char *argv[])
 
     } while(success);
 
-
-    free_kdtree(tree);
-    //free_kdheap(heap);
 
     return EXIT_SUCCESS;
 }

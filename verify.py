@@ -75,7 +75,7 @@ def execute(exe_path, tsp_path, timeout):
     t1 = datetime.now()
     process = subprocess.Popen([str(exe_path), str(tsp_path)],
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.STDOUT)
     dats = []
     while True:
         t_delta = (datetime.now() - t1).total_seconds()
