@@ -46,6 +46,7 @@ def main():
         output_dir = output_dir_parent / tsp_path.stem
         output_dir.mkdir(parents=True, exist_ok=True)
         os.chdir(str(output_dir))
+        print("\n**************************************************")
         print("Executing: {0} {1}".format(args.exec, tsp))
 
         dats = execute(exe_path, tsp_path, LIM_SECOND);
@@ -53,15 +54,22 @@ def main():
             dat_path, t_delta = dats[-1]
             dat_path = Path(dat_path).resolve()
             process = libverify.check(tsp_path, dat_path)
+            stdout, stderr = process.communicate()
+
+            stdout = stdout.decode('utf-8').strip()
+            stderr = stderr.decode('utf-8').strip()
+            print(stdout, stderr)
 
             if (process.returncode == 0):
-                match = re_expr.match(process.stdout.decode('utf-8'))
+                match = re_expr.match(stdout)
                 if match:
                     dist = match.group('dist')
                     print("{0} is valid. Distance: {1}, Time: {2}".format(
                         dat_path.name, dist, t_delta)
                     )
                     stats.append((tsp_path.name, dist, t_delta))
+                else:
+                    print("{0} is not valid.".format(dat_path.name))
         else:
             print("No tsp file generated over {0}".format(str(tsp_path.name)))
             stats.append((tsp_path.name, None, None))
@@ -87,12 +95,12 @@ def execute(exe_path, tsp_path, timeout):
                 dats.append((datname, t_delta))
             print(output.strip())
         elif process.poll() is not None:
-            print("[Finished]", end=" ", flush=True)
+            print("[Finished '{0}']".format(tsp_path.stem), end=" ", flush=True)
             break
 
         if t_delta >= timeout:
             process.kill()
-            print("[Terminated]", end=" ", flush=True)
+            print("[Terminated '{0}']".format(tsp_path.stem), end=" ", flush=True)
             break
     return dats
 

@@ -50,6 +50,11 @@ static inline double metric(const struct point* p, const struct point* q)
 
 }
 
+static inline double distp(struct point* p, struct point* q)
+{
+    return sqrt((p->x - q->x) * (p->x - q->x) + (p->y - q->y) * (p->y - q->y));
+}
+
 static inline double dist(struct point p, struct point q)
 {
     return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));

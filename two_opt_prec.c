@@ -8,14 +8,12 @@
 bool two_opt_prec(struct point pts[], int n_pts,
                   int prec[], int n_prec, int tour[])
 {
-    bool success = false;
-    int i;
+    int i, j;
     bool is_in_prec[n_pts];
     for (i = 0; i < n_pts; i++) is_in_prec[i] = false;
-    for (i = 0; i < n_prec; i++) {
-        is_in_prec[prec[i]] = true;
-    }
+    for (i = 0; i < n_prec; i++) is_in_prec[prec[i]] = true;
 
+    bool success = false;
     for (i = 0; i < n_pts-3; i++) {
         int co_prec = 0;
         int a_ix = tour[i];
@@ -23,7 +21,6 @@ bool two_opt_prec(struct point pts[], int n_pts,
         if (is_in_prec[b_ix]) co_prec++;
         double dist_ab = dist(pts[a_ix], pts[b_ix]);
 
-        int j;
         for (j = i+2; j < n_pts-1; j++){
             int c_ix = tour[j];
             int d_ix = tour[j + 1];
