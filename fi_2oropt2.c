@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "point.h"
+#include "kdtree.h"
 #include "fi_prec.h"
 #include "two_opt_prec.h"
 #include "or_opt_prec.h"
@@ -138,15 +139,16 @@ void print_points(struct point pts[], int n_pts)
     }
 }
 
-void save_tour_if_shortest(struct point pts[], int n_pts, int tour[], double* min_length)
+void save_tour_if_shortest(struct point pts[], int n_pts, int tour[], int best_tour[], double* min_length)
 {
     double length = tour_length(pts, n_pts, tour);
     if (length < *min_length) {
         *min_length = length;
-        //memcpy(best_tour, tour, sizeof(int) * n_pts);
+        memcpy(best_tour, tour, sizeof(int) * n_pts);
         sprintf(tourFileName, "tour%08d.dat", ++num);
         write_tour_data(tourFileName, n_pts, tour);
         printf("\n%s: %lf\n", tourFileName, *min_length);
+        fflush(stdout);
     }
 }
 
@@ -168,11 +170,17 @@ int main(int argc, char *argv[])
     //print_prec(prec, n_prec);
 
     int tour[MAX_N];
+    int best_tour[MAX_N];
     double min_length = DBL_MAX;
 
+    struct kdtree* tree = build_kdtree(pts, n_pts);
+    struct kdheap* heap = create_kdheap(tree);
+
+    //build_tour_nn_prec(0, pts, n_pts, prec, n_prec, tour, tree, heap);
+    //build_tour_ni_prec(pts, n_pts, prec, n_prec, tour, tree);
     build_tour_fi_prec(pts, n_pts, prec, n_prec, tour);
     //print_tour(pts, n_pts, tour);
-    save_tour_if_shortest(pts, n_pts, tour, &min_length);
+    save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
     bool success;
     do {
@@ -181,9 +189,13 @@ int main(int argc, char *argv[])
         for (i = 0; i < 6; i++) {
             success |= or_opt_prec2(pts, n_pts, prec, n_prec, tour, i);
         }
-        save_tour_if_shortest(pts, n_pts, tour, &min_length);
+        save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
     } while(success);
+    
+
+    free_kdtree(tree);
+    free_kdheap(heap);
 
     return EXIT_SUCCESS;
 }

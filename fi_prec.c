@@ -69,7 +69,7 @@ void build_tour_fi_prec(struct point pts[], int n_pts,
         struct point* c = a->next;
 
        // Insert the fartest point from the tour `r` into either edge next to `a`.
-        if (metric(r, b) - metric(b, a) < metric(r, c) - metric(a, c)) {
+        if (distp(r, b) - distp(b, a) < distp(r, c) - distp(a, c)) {
             // b->a ==> b->r->a
             insert(b, a, r);
         } else {
