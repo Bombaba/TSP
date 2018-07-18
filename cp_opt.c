@@ -11,6 +11,7 @@ void extract_cp(struct point pts[], int n_pts,
 	int degree[n_pts];
 	double population[n_pts], *ptrs[n_pts], popu_memo[n_pts];
 	double thre = mean * 1.5;
+	//double thre = 200.0;
 
 	for(i=0;i<n_pts;i++) { population[i] = 1.0; degree[i] = 0; }
 
@@ -48,13 +49,15 @@ void extract_cp(struct point pts[], int n_pts,
 			if(p_num == 0) {
 				popu_memo[0] = population[i];
 				copy_point(&pts[i], &p_pts[0]);
-			} else if(popu_memo[p_num-1] < population[i]) {
+			//} else if(popu_memo[p_num-1] < population[i]) {
+			} else if(popu_memo[p_num-1] > population[i]) {
 				j = p_num;
 				do {
 					popu_memo[j] = popu_memo[j-1];	
 					copy_point(&p_pts[j-1], &p_pts[j]);
 					j--;
-				} while(j > 0 && popu_memo[j-1] < population[i]);
+				//} while(j > 0 && popu_memo[j-1] < population[i]);
+				} while(j > 0 && popu_memo[j-1] > population[i]);
 				popu_memo[j] = population[i];
 				copy_point(&pts[i], &p_pts[j]);
 			} else {
@@ -98,12 +101,12 @@ void restore_cp(struct point c_pts[], int c_num, int c_tour[], struct point p_pt
 
 		cur = &list[0];
 		do {
-			dist12 = sqrt(metric(cur, cur->next));
-			dist13 = sqrt(metric(cur, &p_pts[i]));
-			dist23 = sqrt(metric(&p_pts[i], cur->next));
+			dist12 = metric(cur, cur->next);
+			dist13 = metric(cur, &p_pts[i]);
+			dist23 = metric(&p_pts[i], cur->next);
 			if(dist13+dist23-dist12 < min_dist) {
 				min_ptr = cur;
-				min_dist = dist13+dist23-dist12;
+				min_dist = sqrt(dist13)+sqrt(dist23)-sqrt(dist12);
 			}
 			cur = cur->next;
 		} while(cur != &list[0]);
