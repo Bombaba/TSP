@@ -57,7 +57,7 @@ bool or_opt_prec(struct point pts[], int n_pts,
 }
 
 bool or_opt_prec2(struct point pts[], int n_pts,
-                 int prec[], int n_prec, int tour[], int length)
+                  int prec[], int n_prec, int tour[], int length)
 {
     int i;
 
@@ -100,7 +100,7 @@ bool or_opt_prec2(struct point pts[], int n_pts,
 
             double dist_ab = distp(a, b);
             double dist_ayb = distp(a, y1) + distp(y2, b);
-            if ( (dist_xyz + dist_ab) > (dist_xz + dist_ayb) ) {
+            if ( (dist_xyz + dist_ab) > (dist_xz + dist_ayb)+0.00000001 ) {
                 success = true;
                 x->next = z;
                 z->prev = x;
