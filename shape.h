@@ -35,4 +35,6 @@ How to use "shape map":
 
 	double length = tour_length(pts, n_pts, tour);
 */
-void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double grv_thre, double alpha);
+void shape_map(struct point pts[], int n_pts, struct point copy_pts[], 
+			   const int cp[], int cn, double grv_thre, double alpha);
+//void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double grv_thre, double alpha);

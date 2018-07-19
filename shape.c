@@ -234,7 +234,8 @@ void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_
 // 元となるpoint型配列ptsを参考に，copy_ptsの中に整形後のデータを保存する
 // grv_thre : gravitation threshold <- どの距離の都市まで引力の影響を受けるか
 // alpha : 移動量にかかる係数
-void shape_map(struct point pts[], int n_pts, struct point copy_pts[], double grv_thre, double alpha)
+void shape_map(struct point pts[], int n_pts, struct point copy_pts[], 
+			   const int cp[], int cn, double grv_thre, double alpha)
 {
 	int i, j, n, s_x, s_y, s_m;
 	int mass[n_pts];
