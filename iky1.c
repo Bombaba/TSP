@@ -1,6 +1,6 @@
 /*
  * 13.Monney-Men
- * Implemented Nearest-Insertion.
+ * Implemented Nearest-Insertion and two-opt.
  */
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +23,13 @@ struct point {
     struct point* next;
     struct point* prev;
 };
+
+static inline void swap(int* a, int* b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
 static inline void copy_point(struct point* origin, struct point* copy)
 {
@@ -49,6 +56,11 @@ static inline double metric(const struct point* p, const struct point* q)
 {
     return (p->x - q->x) * (p->x - q->x) + (p->y - q->y) * (p->y - q->y);
 
+}
+
+static inline double dist(struct point p, struct point q)
+{
+    return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
 
 static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[])
@@ -384,6 +396,7 @@ struct kdtree* build_kdtree_from_indices(struct point pts[], int n_pts,
 
     return tree;
 }
+
 
 
 void free_kdtree(struct kdtree* tree)
@@ -794,13 +807,56 @@ void build_tour_ni_prec(struct point pts[], int n_pts,
     build_tour_from_list(&pts[prec[0]], n_pts, tour);
 }
 
+bool two_opt_prec(struct point pts[], int n_pts,
+                  int prec[], int n_prec, int tour[])
+{
+    bool success = false;
+    int i;
+    bool is_in_prec[n_pts];
+    for (i = 0; i < n_pts; i++) is_in_prec[i] = false;
+    for (i = 0; i < n_prec; i++) {
+        is_in_prec[prec[i]] = true;
+    }
+
+    for (i = 0; i < n_pts-3; i++) {
+        int co_prec = 0;
+        int a_ix = tour[i];
+        int b_ix = tour[i + 1];
+        if (is_in_prec[b_ix]) co_prec++;
+        double dist_ab = dist(pts[a_ix], pts[b_ix]);
+
+        int j;
+        for (j = i+2; j < n_pts-1; j++){
+            int c_ix = tour[j];
+            int d_ix = tour[j + 1];
+            if (is_in_prec[c_ix]) {
+                co_prec++;
+                if (co_prec >= 2) break;
+            }
+            double delta = (dist_ab + dist(pts[c_ix], pts[d_ix]))
+                           - (dist(pts[a_ix], pts[c_ix]) + dist(pts[b_ix], pts[d_ix]));
+
+            if (delta > 0) {
+                success = true;
+                int g = i + 1;
+                int h = j;
+                while (g < h) {
+                    swap(tour + g, tour + h);
+                    g++;
+                    h--;
+                }
+                i--;
+                break;
+            }
+        }
+    }
+
+    return success;
+}
+
+
 int num = 0;
 char tourFileName[20];
-
-
-static inline double dist(struct point p, struct point q) { // pとq の間の距離を計算 
-    return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
-}
 
 double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
     int i;
@@ -916,6 +972,18 @@ void print_points(struct point pts[], int n_pts)
     }
 }
 
+void save_tour_if_shortest(struct point pts[], int n_pts, int tour[], double* min_length)
+{
+    double length = tour_length(pts, n_pts, tour);
+    if (length < *min_length) {
+        *min_length = length;
+        //memcpy(best_tour, tour, sizeof(int) * n_pts);
+        sprintf(tourFileName, "tour%08d.dat", ++num);
+        write_tour_data(tourFileName, n_pts, tour);
+        printf("\n%s: %lf\n", tourFileName, *min_length);
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -930,7 +998,7 @@ int main(int argc, char *argv[])
     }
 
     read_tsp_data(argv[1], pts, &n_pts, prec, &n_prec);
-    print_prec(prec, n_prec);
+    //print_prec(prec, n_prec);
 
     int tour[MAX_N];
     double min_length = DBL_MAX;
@@ -940,16 +1008,17 @@ int main(int argc, char *argv[])
     //struct kdheap* heap = create_kdheap(tree);
 
     build_tour_ni_prec(pts, n_pts, prec, n_prec, tour, tree);
-    print_tour(pts, n_pts, tour);
+    //print_tour(pts, n_pts, tour);
+    save_tour_if_shortest(pts, n_pts, tour, &min_length);
 
-    double length = tour_length(pts, n_pts, tour);
-    if (length < min_length) {
-        min_length = length;
-        //memcpy(best_tour, tour, sizeof(int) * n_pts);
-        sprintf(tourFileName, "tour%08d.dat", ++num);
-        write_tour_data(tourFileName, n_pts, tour);
-        printf("\n%s: %lf\n", tourFileName, min_length);
-    }
+    bool success = false;
+    do {
+        success = 0;
+        success = two_opt_prec(pts, n_pts, prec, n_prec, tour);
+        save_tour_if_shortest(pts, n_pts, tour, &min_length);
+
+    } while(success);
+
 
     free_kdtree(tree);
     //free_kdheap(heap);

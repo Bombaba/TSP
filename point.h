@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include <assert.h>
 
 struct point {
@@ -14,6 +15,13 @@ struct point {
     struct point* next;
     struct point* prev;
 };
+
+static inline void swap(int* a, int* b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
 static inline void copy_point(struct point* origin, struct point* copy)
 {
@@ -40,6 +48,16 @@ static inline double metric(const struct point* p, const struct point* q)
 {
     return (p->x - q->x) * (p->x - q->x) + (p->y - q->y) * (p->y - q->y);
 
+}
+
+static inline double distp(struct point* p, struct point* q)
+{
+    return sqrt((p->x - q->x) * (p->x - q->x) + (p->y - q->y) * (p->y - q->y));
+}
+
+static inline double dist(struct point p, struct point q)
+{
+    return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
 
 static inline void build_list_from_tour(struct point pts[], int n_pts, int tour[])
