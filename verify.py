@@ -11,7 +11,6 @@ from datetime import datetime
 from pathlib import Path
 import libverify
 
-LIM_SECOND= 20 * 60
 
 re_expr = re.compile(r'Valid dat file. (?P<dist>\d+\.\d+)')
 
@@ -22,6 +21,10 @@ def main():
     parser.add_argument(
         "-o", "--output-directory", required=False, default=None,
         help="output directory name"
+    )
+    parser.add_argument(
+        "-t", "--timeout", required=False, type=int, default=20*60,
+        help="timeout"
     )
     args = parser.parse_args()
 
@@ -49,7 +52,7 @@ def main():
         print("\n**************************************************")
         print("Executing: {0} {1}".format(args.exec, tsp))
 
-        dats = execute(exe_path, tsp_path, LIM_SECOND);
+        dats = execute(exe_path, tsp_path, args.timeout);
         if dats:
             dat_path, t_delta = dats[-1]
             dat_path = Path(dat_path).resolve()
@@ -85,22 +88,26 @@ def execute(exe_path, tsp_path, timeout):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
     dats = []
+    output = []
     while True:
         t_delta = (datetime.now() - t1).total_seconds()
-        output = process.stdout.readline().decode('utf-8')
-        if output:
-            if output.startswith("tour"):
-                e = output.find("dat") + 3
-                datname = output[:e]
+        output.append(process.stdout.read(1).decode('utf-8'))
+        print(output[-1], end="", flush=True);
+        if output[-1] == "\n":
+            msg = "".join(output)
+            msg = msg.strip()
+            if msg.startswith("tour"):
+                e = msg.find("dat") + 3
+                datname = msg[:e]
                 dats.append((datname, t_delta))
-            print(output.strip())
+            output = []
         elif process.poll() is not None:
             print("[Finished '{0}']".format(tsp_path.stem), end=" ", flush=True)
             break
 
         if t_delta >= timeout:
             process.kill()
-            print("[Terminated '{0}']".format(tsp_path.stem), end=" ", flush=True)
+            print("\n[Terminated '{0}']".format(tsp_path.stem), end=" ", flush=True)
             break
     return dats
 
