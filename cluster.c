@@ -4,27 +4,46 @@
 #include <string.h>
 #include <float.h>
 
+#include "cluster.h"
 #include "point.h"
 #include "kdtree.h"
+#include "permutation.h"
 
-struct vec2 {
-    double x;
-    double y;
-};
-
-static inline double dot(struct vec2 v1, struct vec2 v2)
-{
-    return v1.x * v2.x + v1.y + v2.y;
-}
-
-static inline double L2norm(struct vec2 v)
-{
-    return sqrt(v.x * v.x + v.y * v.y);
-}
-
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[])
+void optimize(struct point pts[], int n_pts, int cluster[], int n_cluster)
 {
     int i, j;
+    int temp[n_cluster];
+    memcpy(temp, cluster, sizeof(int) * n_cluster);
+
+    if (4 <= n_cluster && n_cluster <= 13) {
+        unsigned fct = factorial(n_cluster - 2);
+        double min_dist = DBL_MAX;
+
+        //printf("***********optimize***********\n");
+        for (i = 0; i < fct; i++) {
+            double dist = get_pathlength(pts, temp, n_cluster);
+
+            if (dist < min_dist) {
+                min_dist = dist;
+                memcpy(cluster, temp, sizeof(int) * n_cluster);
+
+                //for (j = 0; j < n_cluster; j++) {
+                //    printf("%4d ", cluster[j]);
+                //}
+                //printf("\n");
+            }
+
+            perm(temp+1, n_cluster-2);
+        }
+    }
+}
+
+void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[],
+                   int seed)
+{
+    int i, j;
+
+    if (seed != 0) srand((unsigned) seed);
 
     int nearby_prec[n_pts];
     int n_nearby_points[n_pts];
@@ -130,6 +149,10 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         }
         cluster[n_left] = t->index;
         assert(n_left + n_right == n_cluster-1);
+
+        if (seed != 0 && n_cluster >= 4) shuffle(cluster+1, n_cluster-2);
+
+        //optimize(pts, n_pts, cluster, n_cluster);
 
         //printf("#%d : ", t->index);
         //for (j = 0; j < n_cluster; j++) {

@@ -121,12 +121,12 @@ static inline int check_list_from_tour(struct point pts[], int n_pts, int tour[]
 	return 0;
 }
 
-static inline void shuffle(int *array, int n)
+static inline void shuffle(int array[], int n)
 {
     if (n > 1) {
         int i;
         for (i = 0; i < n-1; i++) {
-            int j = i + rand() / (RAND_MAX / (n - 1) + 1);
+            int j = i + rand() / (RAND_MAX / (n - i) + 1);
             int temp = array[j];
             array[j] = array[i];
             array[i] = temp;
