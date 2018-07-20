@@ -1245,6 +1245,9 @@ int main(int argc, char *argv[])
 
     int seed;
     for (seed = 0; seed < 1000000; seed++) {
+        printf("-");
+        fflush(stdout);
+
         build_tour_cl(pts, n_pts, prec, n_prec, tour, seed);
         save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
