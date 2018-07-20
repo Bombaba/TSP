@@ -10,14 +10,10 @@
 #include <math.h>
 #include <assert.h>
 
+
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
-
-struct vec2 {
-    double x;
-    double y;
-};
 
 struct point {
     int index;
@@ -134,12 +130,12 @@ static inline int check_list_from_tour(struct point pts[], int n_pts, int tour[]
 	return 0;
 }
 
-static inline void shuffle(int *array, int n)
+static inline void shuffle(int array[], int n)
 {
     if (n > 1) {
         int i;
         for (i = 0; i < n-1; i++) {
-            int j = i + rand() / (RAND_MAX / (n - 1) + 1);
+            int j = i + rand() / (RAND_MAX / (n - i) + 1);
             int temp = array[j];
             array[j] = array[i];
             array[i] = temp;
@@ -147,6 +143,11 @@ static inline void shuffle(int *array, int n)
     }
 }
 
+
+struct vec2 {
+    double x;
+    double y;
+};
 
 struct kdnode {
     struct point* point;
@@ -176,6 +177,26 @@ struct kdheap {
     int length;
     int maxsize;
 };
+
+static inline double dot(struct vec2 v1, struct vec2 v2)
+{
+    return v1.x * v2.x + v1.y + v2.y;
+}
+
+static inline double L2norm(struct vec2 v)
+{
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+static inline double get_pathlength(struct point pts[], int path[], int n_path)
+{
+    int i;
+    double len = 0;
+    for (i = 0; i < n_path-1; i++) {
+        len += distp(pts + path[i], pts + path[i+1]);
+    }
+    return len;
+}
 
 void ptree(const struct kdnode* node, int depth)
 {
@@ -760,19 +781,14 @@ int search_nearby_points(const struct point* p, const struct kdtree* tree,
     return heap->length;
 } 
 
-static inline double dot(struct vec2 v1, struct vec2 v2)
-{
-    return v1.x * v2.x + v1.y + v2.y;
-}
+void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[], int seed);
 
-static inline double L2norm(struct vec2 v)
-{
-    return sqrt(v.x * v.x + v.y * v.y);
-}
-
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[])
+void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[],
+                   int seed)
 {
     int i, j;
+
+    if (seed != 0) srand((unsigned) seed);
 
     int nearby_prec[n_pts];
     int n_nearby_points[n_pts];
@@ -878,6 +894,10 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         }
         cluster[n_left] = t->index;
         assert(n_left + n_right == n_cluster-1);
+
+        if (seed != 0 && n_cluster >= 4) shuffle(cluster+1, n_cluster-2);
+
+        //optimize(pts, n_pts, cluster, n_cluster);
 
         //printf("#%d : ", t->index);
         //for (j = 0; j < n_cluster; j++) {
@@ -1065,6 +1085,7 @@ bool or_opt_prec2(struct point pts[], int n_pts,
 }
 
 
+
 int num = 0;
 char tourFileName[20];
 
@@ -1221,20 +1242,23 @@ int main(int argc, char *argv[])
     //struct kdheap* heap = create_kdheap(tree);
 
     //print_tour(pts, n_pts, tour);
-    build_tour_cl(pts, n_pts, prec, n_prec, tour);
-    save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
-    bool success;
-    do {
-        success = false;
-        success |= two_opt_prec(pts, n_pts, prec, n_prec, tour);
-        for (i = 0; i < 6; i++) {
-            success |= or_opt_prec2(pts, n_pts, prec, n_prec, tour, i);
-        }
+    int seed;
+    for (seed = 0; seed < 1000000; seed++) {
+        build_tour_cl(pts, n_pts, prec, n_prec, tour, seed);
         save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
-    } while(success);
-    
+        bool success;
+        do {
+            success = false;
+            success |= two_opt_prec(pts, n_pts, prec, n_prec, tour);
+            for (i = 0; i < 6; i++) {
+                success |= or_opt_prec2(pts, n_pts, prec, n_prec, tour, i);
+            }
+            save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
+
+        } while(success);
+    }
 
     //free_kdtree(tree);
     //free_kdheap(heap);
