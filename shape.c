@@ -32,8 +32,8 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 	for(i=1;i<1000;i++) {
 		sum += distribution[i];
 		printf("%d ", distribution[i]);
-		if(sum >= 100) {
-			double thre = ((100 / n_pts) - (sum - distribution[i])) / distribution[i] + i;
+		if(sum >= 500) {
+			double thre = ((500.0 / n_pts) - (sum - distribution[i])) / distribution[i] + i;
 			printf("\nthre : %lf\n", thre);
 			return thre;
 		} else if((double)sum / n_pts > tmp) {
@@ -46,14 +46,17 @@ double optimize_thre(struct point pts[], int n_pts, const struct kdtree* tree, d
 }
 
 int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], 
-				struct point reduced_pts[], const int cp[], int cn, double thre)
+				struct point reduced_pts[], const int cp[], int cn, int copy_cp[], double thre)
 {
-	int i, num, index;
+	int i, j, num, index;
 	struct point list[n_pts*2];
 	struct point start, goal;
 	struct point *current, *current2;
 	struct kdtree *tree = NULL;
+	int weight[n_pts];
 	start.index = -1; goal.index = -2;
+
+	for(i=0;i<n_pts;i++) weight[i] = 1;
 
 	if(thre == 0.0) {
 		for(i=0;i<n_pts;i++)
@@ -93,10 +96,14 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 				// nの操作
 				struct point *n = &list[n_pts + num];
 				copy_point(current, n);
-				n->x = (current->x+current2->x) / 2.0;
-				n->y = (current->y+current2->y) / 2.0;
+				//n->x = (current->x+current2->x) / 2.0;
+				n->x = (weight[current->original_index]*current->x+weight[current2->original_index]*current2->x) / (double)(weight[current->original_index]+weight[current2->original_index]);
+				//n->y = (current->y+current2->y) / 2.0;
+				n->y = (weight[current->original_index]*current->y+weight[current2->original_index]*current2->y) / (double)(weight[current->original_index]+weight[current2->original_index]);
 				n->pos[0] = n->x;
 				n->pos[1] = n->y;
+				weight[current->original_index] += weight[current2->original_index];
+				weight[current2->original_index] += weight[current->original_index];
 				
 				if(success < 2) {
 					// reduced_ptrsに記録
@@ -138,7 +145,8 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 	index = 0;
 	do {
 		copy_pts[index].index = index;
-		copy_pts[index].original_index = current->index;
+		//copy_pts[index].original_index = current->index;
+		copy_pts[index].original_index = current->original_index;
 		copy_pts[index].x = current->x;
 		copy_pts[index].y = current->y;
 		copy_pts[index].pos[0] = current->x;
@@ -148,6 +156,15 @@ int reduce_map(struct point pts[], int n_pts, struct point copy_pts[],
 		index++;
 		current = current->next;
 	} while(current != &goal);
+
+	for(i=0;i<cn;i++) {
+		for(j=0;j<n_pts-num;j++) {
+			if(cp[i] == copy_pts[j].original_index) break;
+		}
+		copy_cp[i] = copy_pts[j].index;
+		//printf("(%d, %d) ", cp[i], copy_cp[i]);
+	}
+	//printf("\n");
 
 	printf("%d cities has reduced!\n", num);
 	return num;

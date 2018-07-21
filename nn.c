@@ -32,6 +32,81 @@ void build_tour_nn(struct point pts[], int n_pts, int ixstart,
     free_kdtree(tree_copy);
 }
 
+void build_tour_nn_prec(int start, struct point pts[], int n_pts,
+                        int prec[], int n_prec,
+                        int tour[], const struct kdtree* tree,
+                        struct kdheap* heap)
+{
+    int i;
+
+    struct kdtree* tree_copy;
+    if (tree == NULL) {
+        tree_copy = build_kdtree(pts, n_pts);
+    } else {
+        tree_copy = copy_kdtree(tree);
+    }
+
+    int prec_list[n_pts];
+    for (i = 0; i < n_pts; i++) prec_list[i] = -1;
+    for (i = 0; i < n_prec; i++) {
+        prec_list[prec[i]] = prec[(i+1)%n_prec];
+    }
+
+    int current_ix = 0;
+
+    tour[current_ix] = start;
+    int next_prec = prec_list[start];
+    remove_point_from_tree(start, tree_copy);
+    struct point* current = pts + start;
+    current_ix++;
+
+    while (tree_copy->n_valid) {
+        //printf("%d (next %d): ", tree_copy->n_valid, next_prec);
+        struct point* nearest;
+        struct point* temp = search_nearest(current, tree_copy);
+        if (next_prec == -1) {
+            //printf("Case 1\n");
+            nearest = temp;
+            next_prec = prec_list[nearest->index];
+            //next_prec = prec_list[nearest->original_index];
+        } else if (prec_list[temp->index] == -1) {
+        //} else if (prec_list[temp->original_index] == -1) {
+            //printf("Case 2\n");
+            nearest = temp;
+        } else if (next_prec == temp->index) {
+        //} else if (next_prec == temp->original_index) {
+            //printf("Case 3\n");
+            nearest = temp;
+            next_prec = prec_list[next_prec];
+        } else {
+            search_nearby_points(current, tree_copy, heap, -1, -1);
+            //printf("Case 4 : ");
+            while((temp = kdh_pop(heap)) != NULL) {
+                //printf("%d ", temp->original_index);
+                if (next_prec == temp->index) {
+                //if (next_prec == temp->original_index) {
+                    next_prec = prec_list[next_prec];
+                    break;
+                } else if (prec_list[temp->index] == -1) {
+                //} else if (prec_list[temp->original_index] == -1) {
+                    break;
+                }
+            }
+            //printf("\n");
+            assert(temp != NULL);
+            nearest = temp;
+        }
+
+        tour[current_ix] = nearest->index;
+        remove_point_from_tree(tour[current_ix], tree_copy);
+        current = nearest;
+        current_ix++;
+    }
+    assert(current_ix == n_pts);
+
+    free_kdtree(tree_copy);
+}
+
 struct vector2 {
     double x;
     double y;

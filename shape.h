@@ -21,7 +21,7 @@ How to use "reduce map":
 	memcpy(best_tour, copy_tour, sizeof(int) * n_pts);
 */
 int reduce_map(struct point pts[], int n_pts, struct point copy_pts[], 
-				struct point reduced_pts[], const int cp[], int cn, double thre);
+				struct point reduced_pts[], const int cp[], int cn, int copy_cp[], double thre);
 
 void restore_reduced_tour(struct point pts[], struct point reduced_pts[], int n_rpts, int tour[], int copy_tour[], int n_pts);
 
