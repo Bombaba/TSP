@@ -781,14 +781,11 @@ int search_nearby_points(const struct point* p, const struct kdtree* tree,
     return heap->length;
 } 
 
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[], int seed);
-
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[],
-                   int seed)
+void build_clusters(struct point pts[], int n_pts,
+                    int prec[], int n_prec,
+                    int out_clusters[], int out_n_clusters[])
 {
     int i, j;
-
-    if (seed != 0) srand((unsigned) seed);
 
     int nearby_prec[n_pts];
     int n_nearby_points[n_pts];
@@ -816,14 +813,15 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         }
     }
 
-    int n_tour_filled = 0;
+    int n_clusters_filled = 0;
 
     for (i = 0; i < n_prec; i++) {
         int n_cluster = n_nearby_points[prec[i]] + 1;
 
         if (n_cluster == 1) {
-            tour[n_tour_filled] = prec[i];
-            n_tour_filled++;
+            out_clusters[n_clusters_filled] = prec[i];
+            n_clusters_filled++;
+            out_n_clusters[i] = 1;
             //printf("#%d : %d\n", prec[i], prec[i]);
             continue;
         }
@@ -895,23 +893,36 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         cluster[n_left] = t->index;
         assert(n_left + n_right == n_cluster-1);
 
-        if (seed != 0 && n_cluster >= 4) shuffle(cluster+1, n_cluster-2);
+        memcpy(out_clusters + n_clusters_filled, cluster, sizeof(int) * n_cluster);
+        n_clusters_filled += n_cluster;
 
-        //optimize(pts, n_pts, cluster, n_cluster);
-
-        //printf("#%d : ", t->index);
-        //for (j = 0; j < n_cluster; j++) {
-        //    printf("%d, ", cluster[j]);
-        //}
-        //printf("\n");
-
-        memcpy(tour + n_tour_filled, cluster, sizeof(int) * n_cluster);
-        n_tour_filled += n_cluster;
+        out_n_clusters[i] = n_cluster;
     }
-    assert(n_tour_filled == n_pts);
+    assert(n_clusters_filled == n_pts);
 
     free_kdtree(kdprec);
 }
+
+void build_tour_cl(struct point pts[], int n_pts,
+                   int prec[], int n_prec,
+                   int clusters[], int n_clusters[],
+                   int tour[], int seed)
+{
+    int i;
+
+    if (seed != 0) srand((unsigned) seed);
+
+    int ix_cluster_begin = 0;
+    if (seed != 0) {
+        for (i = 0; i < n_prec; i++) {
+            shuffle(&clusters[ix_cluster_begin+1], n_clusters[i]-2);
+            ix_cluster_begin += n_clusters[i];
+        }
+    }
+
+    memcpy(tour, clusters, sizeof(int) * n_pts);
+}
+
 
 
 bool two_opt_prec(struct point pts[], int n_pts,
@@ -1238,17 +1249,17 @@ int main(int argc, char *argv[])
     int best_tour[MAX_N];
     double min_length = DBL_MAX;
 
-    //struct kdtree* tree = build_kdtree(pts, n_pts);
-    //struct kdheap* heap = create_kdheap(tree);
+    int clusters[MAX_N];
+    int n_clusters[MAX_N];
 
-    //print_tour(pts, n_pts, tour);
+    build_clusters(pts, n_pts, prec, n_prec, clusters, n_clusters);
 
     int seed;
     for (seed = 0; seed < 1000000; seed++) {
         printf("-");
         fflush(stdout);
 
-        build_tour_cl(pts, n_pts, prec, n_prec, tour, seed);
+        build_tour_cl(pts, n_pts, prec, n_prec, clusters, n_clusters, tour, seed);
         save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
         bool success;
@@ -1263,9 +1274,7 @@ int main(int argc, char *argv[])
         } while(success);
     }
 
-    //free_kdtree(tree);
-    //free_kdheap(heap);
-
     return EXIT_SUCCESS;
 }
+
 
