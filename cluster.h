@@ -26,4 +26,11 @@ static inline double get_pathlength(struct point pts[], int path[], int n_path)
     return len;
 }
 
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[], int seed);
+void build_clusters(struct point pts[], int n_pts,
+                    int prec[], int n_prec,
+                    int out_clusters[], int out_n_clusters[]);
+
+void build_tour_cl(struct point pts[], int n_pts,
+                   int prec[], int n_prec,
+                   int clusters[], int n_clusters[],
+                   int tour[], int seed);

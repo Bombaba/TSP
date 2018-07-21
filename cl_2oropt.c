@@ -173,17 +173,17 @@ int main(int argc, char *argv[])
     int best_tour[MAX_N];
     double min_length = DBL_MAX;
 
-    //struct kdtree* tree = build_kdtree(pts, n_pts);
-    //struct kdheap* heap = create_kdheap(tree);
+    int clusters[MAX_N];
+    int n_clusters[MAX_N];
 
-    //print_tour(pts, n_pts, tour);
+    build_clusters(pts, n_pts, prec, n_prec, clusters, n_clusters);
 
     int seed;
     for (seed = 0; seed < 1000000; seed++) {
         printf("-");
         fflush(stdout);
 
-        build_tour_cl(pts, n_pts, prec, n_prec, tour, seed);
+        build_tour_cl(pts, n_pts, prec, n_prec, clusters, n_clusters, tour, seed);
         save_tour_if_shortest(pts, n_pts, tour, best_tour, &min_length);
 
         bool success;

@@ -11,7 +11,7 @@
 
 void optimize(struct point pts[], int n_pts, int cluster[], int n_cluster)
 {
-    int i, j;
+    int i;
     int temp[n_cluster];
     memcpy(temp, cluster, sizeof(int) * n_cluster);
 
@@ -38,12 +38,11 @@ void optimize(struct point pts[], int n_pts, int cluster[], int n_cluster)
     }
 }
 
-void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int tour[],
-                   int seed)
+void build_clusters(struct point pts[], int n_pts,
+                    int prec[], int n_prec,
+                    int out_clusters[], int out_n_clusters[])
 {
     int i, j;
-
-    if (seed != 0) srand((unsigned) seed);
 
     int nearby_prec[n_pts];
     int n_nearby_points[n_pts];
@@ -71,14 +70,15 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         }
     }
 
-    int n_tour_filled = 0;
+    int n_clusters_filled = 0;
 
     for (i = 0; i < n_prec; i++) {
         int n_cluster = n_nearby_points[prec[i]] + 1;
 
         if (n_cluster == 1) {
-            tour[n_tour_filled] = prec[i];
-            n_tour_filled++;
+            out_clusters[n_clusters_filled] = prec[i];
+            n_clusters_filled++;
+            out_n_clusters[i] = 1;
             //printf("#%d : %d\n", prec[i], prec[i]);
             continue;
         }
@@ -150,21 +150,33 @@ void build_tour_cl(struct point pts[], int n_pts, int prec[], int n_prec, int to
         cluster[n_left] = t->index;
         assert(n_left + n_right == n_cluster-1);
 
-        if (seed != 0 && n_cluster >= 4) shuffle(cluster+1, n_cluster-2);
+        memcpy(out_clusters + n_clusters_filled, cluster, sizeof(int) * n_cluster);
+        n_clusters_filled += n_cluster;
 
-        //optimize(pts, n_pts, cluster, n_cluster);
-
-        //printf("#%d : ", t->index);
-        //for (j = 0; j < n_cluster; j++) {
-        //    printf("%d, ", cluster[j]);
-        //}
-        //printf("\n");
-
-        memcpy(tour + n_tour_filled, cluster, sizeof(int) * n_cluster);
-        n_tour_filled += n_cluster;
+        out_n_clusters[i] = n_cluster;
     }
-    assert(n_tour_filled == n_pts);
+    assert(n_clusters_filled == n_pts);
 
     free_kdtree(kdprec);
+}
+
+void build_tour_cl(struct point pts[], int n_pts,
+                   int prec[], int n_prec,
+                   int clusters[], int n_clusters[],
+                   int tour[], int seed)
+{
+    int i;
+
+    if (seed != 0) srand((unsigned) seed);
+
+    int ix_cluster_begin = 0;
+    if (seed != 0) {
+        for (i = 0; i < n_prec; i++) {
+            shuffle(&clusters[ix_cluster_begin+1], n_clusters[i]-2);
+            ix_cluster_begin += n_clusters[i];
+        }
+    }
+
+    memcpy(tour, clusters, sizeof(int) * n_pts);
 }
 
