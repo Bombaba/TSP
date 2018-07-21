@@ -912,15 +912,15 @@ void build_tour_cl(struct point pts[], int n_pts,
 
     if (seed != 0) srand((unsigned) seed);
 
+    memcpy(tour, clusters, sizeof(int) * n_pts);
+
     int ix_cluster_begin = 0;
     if (seed != 0) {
         for (i = 0; i < n_prec; i++) {
-            shuffle(&clusters[ix_cluster_begin+1], n_clusters[i]-2);
+            shuffle(&tour[ix_cluster_begin+1], n_clusters[i]-2);
             ix_cluster_begin += n_clusters[i];
         }
     }
-
-    memcpy(tour, clusters, sizeof(int) * n_pts);
 }
 
 
