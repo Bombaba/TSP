@@ -16,16 +16,6 @@ static inline double L2norm(struct vec2 v)
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
-static inline double get_pathlength(struct point pts[], int path[], int n_path)
-{
-    int i;
-    double len = 0;
-    for (i = 0; i < n_path-1; i++) {
-        len += distp(pts + path[i], pts + path[i+1]);
-    }
-    return len;
-}
-
 void build_clusters(struct point pts[], int n_pts,
                     int prec[], int n_prec,
                     int out_clusters[], int out_n_clusters[]);
