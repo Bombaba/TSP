@@ -3,14 +3,17 @@
 #include "cp_opt.h"
 #include "nn.h"
 
-void extract_cp(struct point pts[], int n_pts, 
-				struct point c_pts[], struct point p_pts[], int *c_num_ptr, 
-				double mean)
+void extract_cp(struct point pts[], int n_pts, int prec[], int n_prec, 
+				struct point c_pts[], struct point p_pts[], int *c_num_ptr, int copy_prec[], 
+				double mean, double std, double kurtosis, double th)
 {
 	int i, j, c_num, p_num;
 	int degree[n_pts];
 	double population[n_pts], *ptrs[n_pts], popu_memo[n_pts];
-	double thre = mean * 1.5;
+	//double thre = 2*mean + std;
+	//double thre = mean + sqrt(std);
+	double thre = (mean + std) * (log(1000/kurtosis)+1);
+	if(th >= 0) thre = th;
 	//double thre = 200.0;
 
 	for(i=0;i<n_pts;i++) { population[i] = 1.0; degree[i] = 0; }
@@ -38,7 +41,9 @@ void extract_cp(struct point pts[], int n_pts,
 		if(degree[i] == 0)
 			population[i] = 1.0;
 		//printf("%lf ", population[i]);
-		if(population[i] >= 1.0) {
+		int success = 0;
+		for(j=0;j<n_prec;j++) { if(prec[j] == pts[i].original_index) {success = 1; break; }}
+		if(population[i] >= 1.0 || success) {
 			//printf("%d %d %d\n", num, pts[i].x, pts[i].y);
 			copy_point(&pts[i], &c_pts[c_num]);
 			c_pts[c_num].index = c_num;
@@ -67,6 +72,18 @@ void extract_cp(struct point pts[], int n_pts,
 		}
 	}
 	*c_num_ptr = c_num;
+	for(i=0;i<n_prec;i++) {
+		for(j=0;j<c_num;j++) {
+			if(c_pts[j].original_index == prec[i]) {
+				copy_prec[i] = c_pts[j].index;
+				//printf("%d ", prec[i]);
+				break;
+			}
+		}
+	}
+	//printf("\n");
+	//for(i=0;i<n_prec;i++) printf("%d ", prec[i]); printf("\n");
+	//for(i=0;i<n_prec;i++) printf("%d ", copy_prec[i]); printf("\n");
 	//for(i=0;i<p_num;i++) printf("%lf ", popu_memo[i]);
 	//printf("\n");
 	//for(i=0;i<c_num;i++) printf("%d ", c_pts[i].original_index); printf("\n");

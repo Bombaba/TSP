@@ -75,6 +75,7 @@ void build_tour_ni_prec(struct point pts[], int n_pts,
         p->next->prev = p;
     }
     for (i = 0; i < n_prec; i++) {
+		//printf("prec[i]=%d\n", prec[i]);
         remove_point_from_tree(prec[i], tree_copy);
     }
 
