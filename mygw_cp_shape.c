@@ -1454,6 +1454,8 @@ int num = 0;
 char tourFileName[20];
 
 
+
+
 double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
     int i;
     double sum=0.0;
@@ -1582,30 +1584,14 @@ void save_tour_if_shortest(struct point pts[], int n_pts, int tour[], int best_t
     }
 }
 
-
-int main(int argc, char *argv[])
-{
+void execute_cp(struct point pts[], int n_pts, int prec[], int n_prec) {
     int i, j;
-    int n_pts;
-    int n_prec;
-    struct point pts[MAX_N];
-    int prec[MAX_N];   // 順序制約を表現する配列
-
-    if(argc != 2) {
-        fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    read_tsp_data(argv[1], pts, &n_pts, prec, &n_prec);
-    //print_prec(prec, n_prec);
 
     int tour[MAX_N];
-    int best_tour[MAX_N];
     double min_length = DBL_MAX;
 	struct point shaped_pts[MAX_N];
 
     struct kdtree* tree = build_kdtree(pts, n_pts);
-    //struct kdheap* heap = create_kdheap(tree);
 
 	double mean = 0.0, std = 0.0, skewness = 0.0, kurtosis = 0.0;
 	calc_distribution_param(pts, n_pts, tree, &mean, &std, &skewness, &kurtosis);
@@ -1716,6 +1702,34 @@ int main(int argc, char *argv[])
 
 		//}
 	//}
+}
+
+
+int main(int argc, char *argv[])
+{
+    int i, j;
+    int n_pts;
+    int n_prec;
+    struct point pts[MAX_N];
+    int prec[MAX_N];   // 順序制約を表現する配列
+
+    if(argc != 2) {
+        fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    read_tsp_data(argv[1], pts, &n_pts, prec, &n_prec);
+    //print_prec(prec, n_prec);
+
+    int tour[MAX_N];
+    int best_tour[MAX_N];
+    double min_length = DBL_MAX;
+	struct point shaped_pts[MAX_N];
+
+    struct kdtree* tree = build_kdtree(pts, n_pts);
+    //struct kdheap* heap = create_kdheap(tree);
+
+	execute_cp(pts, n_pts, prec, n_prec);
 
 	return EXIT_SUCCESS;
 }
