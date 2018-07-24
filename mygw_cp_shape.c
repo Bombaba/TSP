@@ -1590,7 +1590,6 @@ int main(int argc, char *argv[])
     int n_prec;
     struct point pts[MAX_N];
     int prec[MAX_N];   // 順序制約を表現する配列
-	int copy_prec[MAX_N];
 
     if(argc != 2) {
         fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
@@ -1600,7 +1599,7 @@ int main(int argc, char *argv[])
     read_tsp_data(argv[1], pts, &n_pts, prec, &n_prec);
     //print_prec(prec, n_prec);
 
-    int tour[MAX_N], copy_tour[MAX_N];
+    int tour[MAX_N];
     int best_tour[MAX_N];
     double min_length = DBL_MAX;
 	struct point shaped_pts[MAX_N];
@@ -1619,20 +1618,22 @@ int main(int argc, char *argv[])
 	double cp_min_length = DBL_MAX;
 
 	double k = 0.0, thre, length;
-	double klist[] = {0.01, 0.02, 0.05, 0.07, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.3};
+	//double klist[] = {0.01, 0.02, 0.05, 0.07, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.3};
 	double taboo[1000];
+	int copy_tour[MAX_N];
+	int copy_prec[MAX_N];
 	for(i=0;i<1000;i++) taboo[i] = 0;
 
 
-	int k_i;
-	for (thre=1.1;thre<=1.5;thre+=0.1) { 
-		for (k_i=0;k_i<13;k_i++) {
-			k = klist[k_i];
-			if(taboo[(int)(k*100)]) continue;
+	//int k_i;
+	//for (thre=1.1;thre<=1.5;thre+=0.1) { 
+		//for (k_i=0;k_i<13;k_i++) {
+			//k = klist[k_i];
+			//if(taboo[(int)(k*100)]) continue;
 			//printf("\nk=%lf\n", k);
 
 			printf("\n################ Shape ###############\n");
-			shape_map(pts, n_pts, shaped_pts, prec, n_prec, -1, k);
+			shape_map(pts, n_pts, shaped_pts, prec, n_prec, -1, 0.1);
 
 			printf("\n############### Extract ##############\n");
 			extract_cp(shaped_pts, n_pts, prec, n_prec, c_pts, p_pts, &c_num, copy_prec, mean, std, kurtosis, -1);
@@ -1656,7 +1657,7 @@ int main(int argc, char *argv[])
 
 				int seed;
 				double ave_len = 0.0;
-				int seed_max = 50;
+				int seed_max = 10;
 				for(seed=0;seed<seed_max;seed++) {
 					double local_min = 1000000000;
 					struct point copy_p_pts[MAX_N];
@@ -1710,29 +1711,11 @@ int main(int argc, char *argv[])
 						write_tour_data(tourFileName, n_pts, tour);
 						printf("\n%s: %lf\n", tourFileName, min_length);
 					}
-					if(local_min > length)
-						local_min = length;
-
-					ave_len += local_min;
-					if(seed > 20 && ave_len / seed > min_length * thre) {
-						printf("break\n");
-						success = false;
-						if(seed <= 25) {
-							taboo[(int)(k*100)] = 1;
-							printf("taboo\n");
-						}
-						break;
-					}
-					if(seed > 40 && ave_len / seed > min_length * ((thre-1)*0.5+1)) {
-						printf("break2\n");
-						success = false;
-						break;
-					}
 				}
 			} while(success);
 
-		}
-	}
+		//}
+	//}
 
 	return EXIT_SUCCESS;
 }
